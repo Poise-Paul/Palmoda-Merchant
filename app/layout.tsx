@@ -3,6 +3,9 @@ import "../styles/globals.css";
 import type { Metadata } from "next";
 import Header from "./_components/Header";
 import Sidebar from "./_components/Sidebar";
+import {AuthProvider} from "./_lib/AuthContext"
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export const metadata: Metadata = {
   title: {
@@ -25,7 +28,8 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head />
       <body className="min-h-screen  text-black">
-        {/* Fixed Header */}
+       <AuthProvider>
+         {/* Fixed Header */}
         <Header />
 
         <div className="flex pt-[50px] h-[calc(100vh-50px)]">
@@ -37,6 +41,8 @@ export default function RootLayout({
             {children}
           </main>
         </div>
+       </AuthProvider>
+       <ToastContainer position="top-right" autoClose={3000} />
       </body>
     </html>
   );

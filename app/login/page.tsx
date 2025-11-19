@@ -1,7 +1,34 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
+import { useAuth } from "../_lib/AuthContext";
+import {vendorLogin} from "../_lib/vendor"
+import { toast } from "react-toastify";
 
 function Page() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+
+  const handleLogin = async (e: any) => {
+       e.preventDefault();
+       setLoading(true);
+       try {
+         const res = await vendorLogin(email, password);
+         
+   if (res.success) {
+     login(res); 
+          toast.success("Login Successful");
+          setLoading(false);
+   }
+          
+       } catch (error: any) {
+        toast.error(error.message);
+       }finally{
+        setLoading(false);
+       }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
       <div className="bg-white w-full max-w-md p-6 rounded-xl shadow-md">
@@ -9,13 +36,17 @@ function Page() {
           Log In
         </h1>
 
-        <form className="flex flex-col gap-4">
+        <form 
+        onSubmit={handleLogin}
+        className="flex flex-col gap-4">
           <div>
             <label className="block text-left text-sm font-medium text-gray-700 mb-1">
               Email
             </label>
             <input
               type="email"
+              onChange={(e) => setEmail(e.target.value)}
+              value={email}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
               placeholder="Enter your email"
             />
@@ -27,6 +58,8 @@ function Page() {
             </label>
             <input
               type="password"
+               onChange={(e) => setPassword(e.target.value)}
+               value={password}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
               placeholder="Enter your password"
             />
@@ -34,9 +67,11 @@ function Page() {
 
           <button
             type="submit"
-            className="w-full bg-black text-white py-2 rounded-lg text-lg font-medium hover:bg-gray-900 transition"
+            disabled={loading} // disable button when loading
+            className={`w-full py-2 rounded-lg text-lg font-medium transition 
+              ${loading ? "bg-gray-500 cursor-not-allowed" : "bg-black text-white hover:bg-gray-900"}`}
           >
-            Log In
+            {loading ? "Logging in..." : "Log In"}
           </button>
         </form>
 

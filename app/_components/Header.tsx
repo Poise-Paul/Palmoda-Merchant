@@ -3,7 +3,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { FiSearch, FiMenu, FiX } from "react-icons/fi";
 import { CiUser } from "react-icons/ci";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FiUserPlus,
   FiFileText,
@@ -34,6 +34,8 @@ function Header() {
     { href: "/payouts", label: "Payouts", icon: <FiDollarSign /> },
     { href: "/settings", label: "Settings", icon: <FiSettings /> },
   ];
+
+  
 
   return (
     <>
@@ -66,9 +68,9 @@ function Header() {
         </div>
 
         <div className="flex items-center gap-4">
-          <button className="bg-black hidden md:block text-white text-[13px] uppercase font-medium py-2 px-[8px]">
+          {/* <button className="bg-black hidden md:block text-white text-[13px] uppercase font-medium py-2 px-[8px]">
             Become a vendor
-          </button>
+          </button> */}
           <div className="flex items-center gap-2">
             <CiUser size={25} color="black" />
             <h2 className="font-semibold text-black text-[15px]">
