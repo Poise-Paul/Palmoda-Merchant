@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true); // 🔥 NEW
+  const [loading, setLoading] = useState(true); 
 
   const decodeToken = (token) => {
     try {
