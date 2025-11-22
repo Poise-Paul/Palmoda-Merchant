@@ -1,8 +1,11 @@
 "use client";
 import React, { useState } from "react";
 import { useAuth } from "../_lib/AuthContext";
-import {vendorLogin} from "../_lib/vendor"
+import { vendorLogin } from "../_lib/vendor";
 import { toast } from "react-toastify";
+import { Link } from "@heroui/link";
+import { Button } from "@heroui/button";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 function Page() {
   const [email, setEmail] = useState("");
@@ -10,24 +13,25 @@ function Page() {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
 
+  const [showPassword, setShowPassword] = useState(false);
+
   const handleLogin = async (e: any) => {
-       e.preventDefault();
-       setLoading(true);
-       try {
-         const res = await vendorLogin(email, password);
-         
-   if (res.success) {
-     login(res); 
-          toast.success("Login Successful");
-          setLoading(false);
-   }
-          
-       } catch (error: any) {
-        toast.error(error.message);
-       }finally{
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await vendorLogin(email, password);
+
+      if (res.success) {
+        login(res);
+        toast.success("Login Successful");
         setLoading(false);
-       }
-  }
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
@@ -36,9 +40,7 @@ function Page() {
           Log In
         </h1>
 
-        <form 
-        onSubmit={handleLogin}
-        className="flex flex-col gap-4">
+        <form onSubmit={handleLogin} className="flex flex-col gap-4">
           <div>
             <label className="block text-left text-sm font-medium text-gray-700 mb-1">
               Email
@@ -56,13 +58,22 @@ function Page() {
             <label className="block text-left text-sm font-medium text-gray-700 mb-1">
               Password
             </label>
-            <input
-              type="password"
-               onChange={(e) => setPassword(e.target.value)}
-               value={password}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
-              placeholder="Enter your password"
-            />
+            <div className="relative w-full">
+              <input
+                type={showPassword ? "password" : "text"}
+                onChange={(e) => setPassword(e.target.value)}
+                value={password}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
+                placeholder="Enter your password"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-0">
+                <Button
+                  onPress={() => setShowPassword(!showPassword)}
+                  isIconOnly
+                  startContent={showPassword ? <FaEye /> : <FaEyeSlash />}
+                />
+              </div>
+            </div>
           </div>
 
           <button
@@ -78,6 +89,13 @@ function Page() {
         <p className="text-center text-gray-600 text-sm mt-4">
           Forgot password?
         </p>
+
+        <div className="justify-center text-center my-5">
+          <small>Don't Have an account?</small>{" "}
+          <Link href="/signup" className="text-blue-500">
+            <small>Sign Up</small>
+          </Link>
+        </div>
       </div>
     </div>
   );

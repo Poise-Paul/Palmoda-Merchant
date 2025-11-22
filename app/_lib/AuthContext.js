@@ -1,6 +1,7 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const AuthContext = createContext();
 
@@ -10,7 +11,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
 
   const decodeToken = (token) => {
     try {
@@ -68,19 +69,22 @@ export const AuthProvider = ({ children }) => {
     router.push("/login");
   };
 
+  const queryClient = new QueryClient();
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        isAuthenticated,
-        login,
-        logout,
-        loading, // 🔥 expose loading
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+    <QueryClientProvider client={queryClient}>
+      <AuthContext.Provider
+        value={{
+          user,
+          token,
+          isAuthenticated,
+          login,
+          logout,
+          loading, // 🔥 expose loading
+        }}
+      >
+        {children}
+      </AuthContext.Provider>
+    </QueryClientProvider>
   );
 };
 
