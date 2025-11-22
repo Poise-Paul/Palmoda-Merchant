@@ -7,6 +7,8 @@ import BrandUploadBox from './BrandUploadBox';
 import { toast } from "react-toastify";
 import axios from 'axios';
 import {setUpBrandProfile, getBrandDetails, updateBrandDetails} from "../_lib/brand"
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const cloudName = "jokoyoski"; 
 const uploadPreset = "jokoyoski";
@@ -50,6 +52,8 @@ const BrandProfilePage = () => {
   const [brandExists, setBrandExists] = useState(false);
   const [tiktok, setTiktok] = useState("");
   const [website, setWebsite] = useState("");
+  const router = useRouter();
+
 
   const logoBlackRef = useRef<HTMLInputElement | null>(null);
   const logoWhiteRef = useRef<HTMLInputElement | null>(null);
@@ -282,7 +286,9 @@ const handleUpdate = async () => {
         <div className='flex justify-between items-center my-3'>
           <button className='bg-inherit border border-black text-black p-[5px] w-[120px] text-sm'>Save as Draft</button>
           <div className='flex gap-2'>
-  <button className='bg-inherit border border-black text-black p-[5px] w-[120px] text-sm'>Back</button>
+  <button
+  onClick={() => router.back()}
+  className='bg-inherit border border-black text-black p-[5px] w-[120px] text-sm'>Back</button>
 
   {!brandExists && (
     <button
@@ -315,7 +321,7 @@ const handleUpdate = async () => {
             <BiSolidInfoCircle />
             <p>Need help setting up your brand profile? View our guide</p>
           </div>
-          <p className='text-black font-semibold text-sm'>Skip for now</p>
+          <Link href="/" className='text-black font-semibold text-sm'>Skip for now</Link>
         </div>
       </div>
     </section>

@@ -10,7 +10,7 @@ import { useCategories } from "../../_lib/categories";
 import { useSubCategories } from "../../_lib/subcategories";
 import { useFetchGenders } from "../../_lib/gender";
 import { useFetchSizes } from "../../_lib/sizes";
-import { useFetchColors } from "../../_lib/colors";
+import { useFetchColors, addColor } from "../../_lib/colors";
 import { Button } from "@heroui/button";
 import { useParams } from "next/navigation";
 
@@ -99,6 +99,11 @@ function page() {
     const [loading, setLoading] = useState(false);
     const [imageUploading, setImageUploading] = useState(false);
   const [productLoading, setProductLoading] = useState(true);
+  const [showColorModal, setShowColorModal] = useState(false);
+const [newColorName, setNewColorName] = useState("");
+const [newColorCode, setNewColorCode] = useState("");
+const [addingColor, setAddingColor] = useState(false);
+
 
   const {_id} = useParams();
   useEffect(() => {
@@ -198,6 +203,40 @@ function page() {
       };
 
     
+  const handleAddColor = async () => {
+    if (!newColorName || !newColorCode) {
+      toast.error("Please enter both color name and code");
+      return;
+    }
+  
+    setAddingColor(true);
+    const toastId = toast.loading("Adding Color...");
+    const res = await addColor(newColorName, newColorCode);
+  
+    if (res?.success) {
+     toast.update(toastId, {
+        render: "Color added successfully!",
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
+      });
+  
+      // reset modal
+      setNewColorName("");
+      setNewColorCode("");
+      setShowColorModal(false);
+  
+      // refresh colors list
+      setTimeout(() => {
+        window.location.reload(); // simplest method
+      }, 800);
+  
+    } else {
+      toast.error(res?.message || "Failed to add color");
+    }
+  
+    setAddingColor(false);
+  };
       
 
 
@@ -337,6 +376,7 @@ useEffect(() => {
                 placeholder="Enter  Product Name"
                 className="
              text-gray-500 p-1 text-sm border border-gray-300 focus:ring-0"
+             disabled={true}
               />
             </div>
             <div className="flex flex-col gap-1.5 w-full">
@@ -352,6 +392,7 @@ useEffect(() => {
                 placeholder="Enter Unique Product Code"
                 className="
              text-gray-500 p-1 text-sm border border-gray-300 focus:ring-0"
+             disabled={true}
               />
             </div>
           </div>
@@ -371,6 +412,7 @@ useEffect(() => {
                   setSelectedCategory(e.target.value);
                   setSelectedSubCategory(""); // Reset subcategory on category change
                 }}
+                disabled={true}
                 className="border border-gray-300 text-sm text-gray-600 p-2 focus:outline-none focus:ring-2 focus:ring-black"
               >
                 <option value="">
@@ -428,6 +470,7 @@ useEffect(() => {
     const selected = Array.from(e.target.selectedOptions, option => option.value);
     setGender(selected);
   }}
+  disabled={true}
                 className="border border-gray-300 text-sm text-gray-600 p-2 focus:outline-none focus:ring-2 focus:ring-black"
               >
                 <option value="">
@@ -473,6 +516,8 @@ useEffect(() => {
   value={materials.join(", ")}  // convert array to string
   onChange={(e) => setMaterials(e.target.value.split(",").map(m => m.trim()))} 
   placeholder="Cotton, Polyester, Silk etc."
+  className="text-gray-500 p-1 text-sm border border-gray-300 focus:ring-0"
+  disabled={true}
 />
 
             </div>
@@ -492,6 +537,7 @@ useEffect(() => {
                 placeholder="Machine wash cold, Dry clean only"
                 className="
              text-gray-500 p-1 text-sm border border-gray-300 focus:ring-0"
+             disabled={true}
               />
             </div>
           </div>
@@ -668,6 +714,46 @@ useEffect(() => {
         </div>
            
            </div>
+           {showColorModal && (
+  <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex justify-center items-center z-50">
+    <div className="bg-white p-5 rounded-md w-[300px] shadow-lg">
+      <h2 className="text-lg font-semibold mb-3">Add New Color</h2>
+
+      <input
+        type="text"
+        placeholder="Color Name"
+        value={newColorName}
+        onChange={(e) => setNewColorName(e.target.value)}
+        className="border border-gray-300 w-full p-2 mb-2  rounded-sm"
+      />
+
+      <input
+        type="text"
+        placeholder="Color Hex Code (#000000)"
+        value={newColorCode}
+        onChange={(e) => setNewColorCode(e.target.value)}
+        className="border border-gray-300 w-full p-2 mb-4 rounded-sm"
+      />
+
+      <div className="flex justify-end gap-2">
+        <button
+          onClick={() => setShowColorModal(false)}
+          className="px-3 py-1 border border-gray-500 text-gray-700"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={handleAddColor}
+          disabled={addingColor}
+          className="px-3 py-1 bg-black text-white"
+        >
+          {addingColor ? "Adding..." : "Add Color"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </section>    
     
   );

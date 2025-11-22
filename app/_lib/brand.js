@@ -61,6 +61,7 @@ export const getBrandDetails = async (params) => {
             Authorization: `Bearer ${token}`
         }
     });
+    console.log(res.data);
      return res.data;
     } catch (error) {
         if (error.response?.data?.message) {

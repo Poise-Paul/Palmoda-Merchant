@@ -10,7 +10,7 @@ import { useCategories } from "../_lib/categories";
 import { useSubCategories } from "../_lib/subcategories";
 import { useFetchGenders } from "../_lib/gender";
 import { useFetchSizes } from "../_lib/sizes";
-import { useFetchColors } from "../_lib/colors";
+import { useFetchColors, addColor } from "../_lib/colors";
 import { Button } from "@heroui/button";
 
 const cloudName = "jokoyoski";
@@ -60,8 +60,8 @@ function page() {
   const [description, setDescription] = useState("");
   const [careInstructions, setCareInstructions] = useState("");
   const [materials, setMaterials] = useState("");
-  const [price, setPrice] = useState<number>(0);
-  const [comparePrice, setComparePrice] = useState<number>(0);
+  const [price, setPrice] = useState("0.00");
+const [comparePrice, setComparePrice] = useState("0.00");
   const [inventory, setInventory] = useState<number>(0);
   const [images, setImages] = useState<string[]>([]);
   const [colors, setColors] = useState<string[]>([]);
@@ -71,6 +71,11 @@ function page() {
   const [gender, setGender] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
+  const [showColorModal, setShowColorModal] = useState(false);
+const [newColorName, setNewColorName] = useState("");
+const [newColorCode, setNewColorCode] = useState("");
+const [addingColor, setAddingColor] = useState(false);
+
 
 
   // Category and subcategory data
@@ -131,6 +136,8 @@ function page() {
     sort_direction: 1,
   });
 
+
+
   const {
     data: categoriesArray = [],
     isLoading,
@@ -180,6 +187,44 @@ function page() {
     }
   };
 
+  const handleAddColor = async () => {
+  if (!newColorName || !newColorCode) {
+    toast.error("Please enter both color name and code");
+    return;
+  }
+
+  setAddingColor(true);
+
+  const res = await addColor(newColorName, newColorCode);
+
+  if (res?.success) {
+    toast.success("Color added successfully!");
+
+    // reset modal
+    setNewColorName("");
+    setNewColorCode("");
+    setShowColorModal(false);
+
+    // refresh colors list
+    setTimeout(() => {
+      window.location.reload(); // simplest method
+    }, 800);
+
+  } else {
+    toast.error(res?.message || "Failed to add color");
+  }
+
+  setAddingColor(false);
+};
+
+
+  const formatMoney = (value: string) => {
+  if (!value) return "0.00";
+  const num = parseFloat(value);
+  return isNaN(num) ? "0.00" : num.toFixed(2);
+};
+
+
   const handleCreateProduct = async () => {
     if (
       !productName ||
@@ -199,14 +244,14 @@ function page() {
     const productData = {
       name: productName,
       images,
-      cost_price: price,
+      cost_price: parseFloat(price),
       description,
       genders: [gender],
       sizes,
       look_after_me: careInstructions,
       colors,
       fabrics: [materials],
-      discounted_price: comparePrice,
+  discounted_price: parseFloat(comparePrice),
       countries: ["68fc2044c642a564a546feda"],
       quantity: inventory,
       sub_categories: [selectedSubCategory],
@@ -434,14 +479,13 @@ function page() {
                   Price (NGN)*
                 </label>
                 <input
-                  type="number"
-                  name=""
-                  value={price}
-                  onChange={(e) => setPrice(Number(e.target.value))}
-                  id=""
-                  className="
-             text-gray-500 p-1 text-sm border border-gray-300 focus:ring-0"
-                />
+  type="text"
+  value={price}
+  onChange={(e) => setPrice(e.target.value)}
+  onBlur={() => setPrice(formatMoney(price))}
+  className="text-gray-500 p-1 text-sm border border-gray-300"
+/>
+
               </div>
               <div className="flex flex-col gap-1.5 w-full">
                 <label
@@ -451,14 +495,13 @@ function page() {
                   Compare at Price (NGN)
                 </label>
                 <input
-                  type="number"
-                  name=""
-                  id=""
-                  value={comparePrice}
-                  onChange={(e) => setComparePrice(Number(e.target.value))}
-                  className="
-             text-gray-500 p-1 text-sm border border-gray-300 focus:ring-0"
-                />
+  type="text"
+  value={comparePrice}
+  onChange={(e) => setComparePrice(e.target.value)}
+  onBlur={() => setComparePrice(formatMoney(comparePrice))}
+  className="text-gray-500 p-1 text-sm border border-gray-300"
+/>
+
               </div>
               <div className="flex flex-col gap-1.5 w-full">
                 <label
@@ -503,6 +546,13 @@ function page() {
                     style={{ backgroundColor: color.code }}
                   ></button>
                 ))}
+                <button
+      onClick={() => setShowColorModal(true)}
+      className="w-7 h-7 rounded-full border border-gray-400 flex items-center 
+                 justify-center text-black text-lg font-semibold hover:bg-gray-200"
+    >
+      +
+    </button>
               </div>
             </div>
 
@@ -591,6 +641,47 @@ function page() {
           </div>
         </div>
       </div>
+      {showColorModal && (
+  <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex justify-center items-center z-50">
+    <div className="bg-white p-5 rounded-md w-[300px] shadow-lg">
+      <h2 className="text-lg font-semibold mb-3">Add New Color</h2>
+
+      <input
+        type="text"
+        placeholder="Color Name"
+        value={newColorName}
+        onChange={(e) => setNewColorName(e.target.value)}
+        className="border border-gray-300 w-full p-2 mb-2  rounded-sm"
+      />
+
+      <input
+        type="text"
+        placeholder="Color Hex Code (#000000)"
+        value={newColorCode}
+        onChange={(e) => setNewColorCode(e.target.value)}
+        className="border border-gray-300 w-full p-2 mb-4 rounded-sm"
+      />
+
+      <div className="flex justify-end gap-2">
+        <button
+          onClick={() => setShowColorModal(false)}
+          className="px-3 py-1 border border-gray-500 text-gray-700"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={handleAddColor}
+          disabled={addingColor}
+          className="px-3 py-1 bg-black text-white"
+        >
+          {addingColor ? "Adding..." : "Add Color"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </section>
   );
 }

@@ -43,3 +43,29 @@ export const useFetchColors = () => {
     enabled: isClient && !!token,
   });
 };
+
+
+export const addColor = async (name:string, code:string) => {
+  try {
+     const token = localStorage.getItem("token");
+    if (!token) return console.log("No token found");
+    const res = await axios.post(`${backendUrl}/color/create`, {name, code}, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return res.data;
+  } catch (error:any) {
+    if (error.response?.data?.message) {
+      return {
+        success: false,
+        message: error.response.data.message,
+      };
+    }
+
+    return {
+      success: false,
+      message: error.message || "Something went wrong",
+    };
+  }
+}

@@ -14,6 +14,7 @@ interface ProductType {
   status: string;
   quantity: number;
  images: string[];
+ sku: string;
 }
 
 interface ProductsProps {
@@ -25,6 +26,9 @@ function Products({ products, setProducts }: ProductsProps) {
   const [filter, setFilter] = useState<string>("All");
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
+  const [currentPage, setCurrentPage] = useState(1);
+const itemsPerPage = 4;
+
 
   // FIX: Map backend status to UI status style
   const formatStatus = (status: string): string => {
@@ -74,6 +78,23 @@ function Products({ products, setProducts }: ProductsProps) {
   }
 };
 
+// Total pages
+const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+
+// Slice products for current page
+const paginatedProducts = filteredProducts.slice(
+  (currentPage - 1) * itemsPerPage,
+  currentPage * itemsPerPage
+);
+
+// Handle page click
+const goToPage = (page: number) => {
+  if (page >= 1 && page <= totalPages) {
+    setCurrentPage(page);
+  }
+};
+
+
 
   return (
     <div className="w-full  px-4 py-2 bg-white rounded-md shadow-sm border border-gray-200">
@@ -102,7 +123,7 @@ function Products({ products, setProducts }: ProductsProps) {
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead>
-            <tr className="bg-gray-100 text-gray-700 text-left">
+            <tr className="font-semibold text-gray-500 uppercase  text-xs text-center">
               <th className="p-3">Product</th>
               <th className="p-3">Price</th>
               <th className="p-3">Status</th>
@@ -112,22 +133,25 @@ function Products({ products, setProducts }: ProductsProps) {
           </thead>
 
           <tbody>
-            {filteredProducts.map((product) => (
+            {paginatedProducts.map((product) => (
               <tr key={product._id}
               onClick={() => router.push(`/edit-product/${product._id}`)}
               className="hover:bg-gray-50 cursor-pointer transition-colors">
 
                 <td className="p-3 flex items-center gap-2">
-                  <img src={product.images?.[0]} className="w-[30px]" alt={product.name} />
-                  <span className="text-black">{product.name}</span>
+                  <img src={product.images?.[0]} className="w-[40px]" alt={product.name} />
+                  <div>
+                    <h3 className="text-black font-semibold mb-1 text-xs">{product.name}</h3>
+                     <p className="text-gray-500 text-xs">{product?.sku}</p>
+                  </div>
                 </td>
 
-                <td className="p-3">
+                <td className="p-3 text-xs font-semibold">
                   ₦{product.discounted_price?.toLocaleString()}
                 </td>
 
                 <td
-                  className={`p-3 font-semibold ${
+                  className={`p-3 font-semibold text-xs ${
                     formatStatus(product.status) === "LIVE"
                       ? "text-green-600"
                       : formatStatus(product.status) === "PENDING"
@@ -140,7 +164,7 @@ function Products({ products, setProducts }: ProductsProps) {
                   {formatStatus(product.status)}
                 </td>
 
-                <td className="p-3 text-gray-700">
+                <td className="p-3 text-xs font-semibold">
                   {product.quantity} units
                 </td>
                 <td className="p-3">
@@ -171,9 +195,51 @@ function Products({ products, setProducts }: ProductsProps) {
       </div>
 
       {/* Summary */}
-      <p className="text-sm text-gray-600 mt-3">
+     <div className="flex justify-between">
+       <p className=" text-gray-600 mt-3 text-xs">
         Showing {filteredProducts.length} of {products.length} products
       </p>
+      {/* Pagination Controls */}
+{totalPages > 1 && (
+  <div className="flex  items-center gap-2 mt-4">
+
+    <button
+      onClick={() => goToPage(currentPage - 1)}
+      disabled={currentPage === 1}
+      className="px-3 py-1 border text-xs disabled:opacity-40"
+    >
+      Prev
+    </button>
+
+    {[...Array(totalPages)].map((_, index) => {
+      const page = index + 1;
+      return (
+        <button
+          key={page}
+          onClick={() => goToPage(page)}
+          className={`px-3 py-1 border text-xs ${
+            currentPage === page
+              ? "bg-black text-white"
+              : "bg-white text-black"
+          }`}
+        >
+          {page}
+        </button>
+      );
+    })}
+
+    <button
+      onClick={() => goToPage(currentPage + 1)}
+      disabled={currentPage === totalPages}
+      className="px-3 py-1 border text-xs disabled:opacity-40"
+    >
+      Next
+    </button>
+
+  </div>
+)}
+
+     </div>
     </div>
   );
 }

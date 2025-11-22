@@ -1,5 +1,7 @@
 import axios from "axios";
+import {jwtDecode} from "jwt-decode"
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+
 
 export const createProduct = async (productData) => {
   try {
@@ -51,6 +53,9 @@ export const fetchProducts = async (page_number, page_size) => {
     try {
         const token = localStorage.getItem("token");
     if (!token) return console.log("No token found");
+    const decoded = jwtDecode(token);
+    console.log(decoded);
+
       const res = await axios.get(`${backendUrl}/vendor/get-products`, {
         params: {page_number, page_size},
         headers:{
