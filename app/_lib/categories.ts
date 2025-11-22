@@ -1,16 +1,21 @@
 import { CategoriesResponse, CategoryQueryParams } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { useEffect, useState } from "react";
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-export const fetchCategories = async (queryParamsObj: CategoryQueryParams) => {
-  // 1. Convert the JS object into a JSON string
-  const token = localStorage.getItem("token");
+export const fetchCategories = async (
+  queryParamsObj: CategoryQueryParams,
+  token: string | null
+) => {
+  // Safety check: This shouldn't be called without a token due to 'enabled' check below
+  if (!token) {
+    throw new Error("No auth token available");
+  }
 
   const jsonString = JSON.stringify(queryParamsObj);
   const encodedQuery = encodeURIComponent(jsonString);
 
-  // 3. Construct the full URL with the single 'query' parameter
   const fullUrl = `${backendUrl}/category/list/admin?query=${encodedQuery}`;
   const response = await axios.get<CategoriesResponse>(fullUrl, {
     headers: {
@@ -21,13 +26,24 @@ export const fetchCategories = async (queryParamsObj: CategoryQueryParams) => {
 };
 
 export const useCategories = (queryParams: CategoryQueryParams) => {
-  const token = localStorage.getItem("token");
+  // 2. State to hold the token
+  const [token, setToken] = useState<string | null>(null);
+  // 3. State to know we are on the client
+  const [isClient, setIsClient] = useState(false);
+
+  // 4. Use useEffect to get the token ONLY on the client-side
+  useEffect(() => {
+    setIsClient(true);
+    const storedToken = localStorage.getItem("token");
+    setToken(storedToken);
+  }, []);
 
   return useQuery({
-    // The queryKey includes the params so the query refetches if filters/sort/pagination change.
-    queryKey: ["categories", queryParams],
-    queryFn: () => fetchCategories(queryParams),
-    // Optional: Do not run the query if there is no token
-    enabled: !!token,
+    // 5. Add token to queryKey so it refetches when token changes
+    queryKey: ["categories", queryParams, token],
+    // 6. Pass the token state to the fetch function
+    queryFn: () => fetchCategories(queryParams, token),
+    // 7. IMPORTANT: Only enable query on client AND when token exists
+    enabled: isClient && !!token,
   });
 };
