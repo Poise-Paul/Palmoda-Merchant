@@ -82,7 +82,7 @@ function Page() {
   const [accountHolder, setAccountHolder] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [certified, setCertified] = useState(false);
-
+   const [imageUploading, setImageUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   
 
@@ -128,7 +128,8 @@ function Page() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setLoading(true);
+    const toastId = toast.loading("Uploading images...");
+        setImageUploading(true);
     const url = await uploadToCloudinary(file);
     setLoading(false);
 
@@ -138,6 +139,13 @@ function Page() {
       if (type === "bank") setBankStatementUrl(url);
       toast.success("Upload successful");
     }
+    setImageUploading(false);
+        toast.update(toastId, {
+        render: "Images uploaded successfully!",
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
+      });
   };
 
   // Continue button handler — sends the URLs + fields to completeKyc

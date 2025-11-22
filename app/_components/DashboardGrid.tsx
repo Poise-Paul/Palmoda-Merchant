@@ -39,7 +39,7 @@ function DashboardGrid({ products }: ProductsProps) {
   // Loading skeleton
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 my-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 my-4">
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}

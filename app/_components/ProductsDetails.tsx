@@ -5,7 +5,7 @@ import DashboardNotifications from './DashboardNotifications'
 
 function ProductsDetails() {
   return (
-    <div className='w-full lg:w-[30%] flex flex-col gap-2.5'>
+    <div className='w-full  flex flex-col gap-2.5'>
       <RecentOrders />
       <SalesPerformance />
       <DashboardNotifications />

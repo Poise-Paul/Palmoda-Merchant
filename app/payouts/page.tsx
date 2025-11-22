@@ -1,9 +1,43 @@
 "use client";
 import Link from 'next/link'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import ProtectedRoute from '../_components/ProtectedRoute'
+import { toast } from 'react-toastify';
+import { getKycDetails } from '../_lib/vendor';
 
 function page() {
+ const [bankName, setBankName] = useState("");
+   const [accountHolder, setAccountHolder] = useState("");
+   const [accountNumber, setAccountNumber] = useState("");
+    const [loading, setLoading] = useState(false);
+
+   useEffect(() => {
+       const fetchKyc = async () => {
+         setLoading(true);
+         try {
+           const res = await getKycDetails();
+           console.log(res);
+           if (res.success === false) {
+             toast.error(res.message);
+           } else {
+             // Populate form fields
+             setBankName(res.data.bank_name || "");
+             setAccountHolder(res.data.account_holder_name || "");
+             setAccountNumber(res.data.account_number || "");
+           }
+         } catch (err: any) {
+           toast.error(err?.message || "Failed to fetch KYC details");
+         } finally {
+           setLoading(false);
+         }
+       };
+   
+       fetchKyc();
+     }, []);
+
+     const last4Digits = accountNumber.slice(-4);
+   
+
   return (
     <ProtectedRoute>
       <section className='bg-gray-100 min-h-screen px-4  md:px-8 py-6 w-full'>
@@ -25,14 +59,19 @@ function page() {
        <div className='w-full '>
           <div className='bg-white px-4 my-2 rounded-[6px] py-2'>
              <h1 className='text-black font-semibold'>Payout Account</h1>
-             <div className='bg-gray-200 px-3 flex justify-between py-1 rounded-[6px] mt-3'>
-               <div>
-                <h1 className='text-gray-900 text-sm'>First National Bank</h1>
-                <p className='text-gray-700 text-xs'>Laurent Fashion House</p>
-                <p className='text-gray-500 text-xs'>Account ending in •••• 4587</p>
-               </div>
-               <p className='text-purple-500 text-xs'>Primary · Locked</p>
-             </div>
+             {loading ? (
+                // Skeleton loader
+                <div className="animate-pulse bg-gray-200 rounded-md h-20 mt-3"></div>
+              ) : (
+                <div className='bg-gray-200 px-3 flex justify-between py-1 rounded-[6px] mt-3'>
+                  <div>
+                    <h1 className='text-gray-900 text-sm'>{bankName}</h1>
+                    <p className='text-gray-700 text-xs'>{accountHolder}</p>
+                    <p className='text-gray-500 text-xs'>Account ending in •••• {last4Digits}</p>
+                  </div>
+                  <p className='text-purple-500 text-xs'>Primary · Locked</p>
+                </div>
+              )}
              <p className='text-gray-500 my-2 text-xs'>Payout account can only be updated by Palmoda admin. Contact support to make changes.</p>
           </div>
 

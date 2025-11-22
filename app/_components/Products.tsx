@@ -1,6 +1,11 @@
 "use client";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { FaTshirt } from "react-icons/fa";
+import { deleteProduct } from "../_lib/product";
+import { toast } from "react-toastify";
+
 
 interface ProductType {
   _id: string;
@@ -13,10 +18,13 @@ interface ProductType {
 
 interface ProductsProps {
   products: ProductType[];
+  setProducts: React.Dispatch<React.SetStateAction<ProductType[]>>;
 }
 
-function Products({ products }: ProductsProps) {
+function Products({ products, setProducts }: ProductsProps) {
   const [filter, setFilter] = useState<string>("All");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const router = useRouter();
 
   // FIX: Map backend status to UI status style
   const formatStatus = (status: string): string => {
@@ -34,8 +42,41 @@ function Products({ products }: ProductsProps) {
 
   const statuses = ["All", "LIVE", "PENDING", "APPROVED", "REJECTED"];
 
+  const handleDelete = async (id: string) => {
+  try {
+    setIsDeleting(true);
+    const toastId = toast.loading("Deleting product...");
+
+    const res = await deleteProduct(id);
+    console.log(res);
+    if (res.success) {
+      // Remove deleted product from local state
+      setProducts(prev => prev.filter(p => p._id !== id));
+
+      toast.update(toastId, {
+        render: "Product deleted successfully",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    } else {
+      toast.update(toastId, {
+        render: res.message || "Failed to delete product",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    }
+  } catch (error) {
+    toast.error("Something went wrong while deleting product");
+  } finally {
+    setIsDeleting(false);
+  }
+};
+
+
   return (
-    <div className="w-full lg:w-[70%] px-4 py-2 bg-white rounded-md shadow-sm border border-gray-200">
+    <div className="w-full  px-4 py-2 bg-white rounded-md shadow-sm border border-gray-200">
 
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
@@ -66,15 +107,18 @@ function Products({ products }: ProductsProps) {
               <th className="p-3">Price</th>
               <th className="p-3">Status</th>
               <th className="p-3">Inventory</th>
+              <th className="p-3">Actions</th>
             </tr>
           </thead>
 
           <tbody>
             {filteredProducts.map((product) => (
-              <tr key={product._id} className="hover:bg-gray-50 transition-colors">
+              <tr key={product._id}
+              onClick={() => router.push(`/edit-product/${product._id}`)}
+              className="hover:bg-gray-50 cursor-pointer transition-colors">
 
                 <td className="p-3 flex items-center gap-2">
-                  <img src={product.images?.[0]} className="w-[40px]" alt={product.name} />
+                  <img src={product.images?.[0]} className="w-[30px]" alt={product.name} />
                   <span className="text-black">{product.name}</span>
                 </td>
 
@@ -99,7 +143,28 @@ function Products({ products }: ProductsProps) {
                 <td className="p-3 text-gray-700">
                   {product.quantity} units
                 </td>
+                <td className="p-3">
+        <div className="flex gap-2">
+          <Link
+            href={`/edit-product/${product._id}`}
+            className="px-3 py-1 text-xs bg-inherit text-black border border-black uppercase"
+          >
+            Edit
+          </Link>
+
+          <button
+            onClick={(e) => {
+    e.stopPropagation(); // Prevent row click redirect
+    handleDelete(product._id);
+  }}
+            className="px-3 py-1 text-xs text-white bg-black uppercase"
+          >
+            Delete
+          </button>
+        </div>
+      </td>
               </tr>
+
             ))}
           </tbody>
         </table>

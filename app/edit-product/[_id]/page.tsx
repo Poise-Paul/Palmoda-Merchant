@@ -1,17 +1,43 @@
 "use client";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaFileUpload } from "react-icons/fa";
-import { createProduct } from "../_lib/product";
+import { fetchProducts, updateProduct } from "../../_lib/product";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { CategoryQueryParams } from "@/types";
-import { useCategories } from "../_lib/categories";
-import { useSubCategories } from "../_lib/subcategories";
-import { useFetchGenders } from "../_lib/gender";
-import { useFetchSizes } from "../_lib/sizes";
-import { useFetchColors } from "../_lib/colors";
+import { useCategories } from "../../_lib/categories";
+import { useSubCategories } from "../../_lib/subcategories";
+import { useFetchGenders } from "../../_lib/gender";
+import { useFetchSizes } from "../../_lib/sizes";
+import { useFetchColors } from "../../_lib/colors";
 import { Button } from "@heroui/button";
+import { useParams } from "next/navigation";
+
+interface ProductType {
+  _id: string;
+  name: string;
+  discounted_price: number;
+  status: string;
+  quantity: number;
+ images: string[];
+ sku: string,
+ description: string,
+ look_after_me: string,
+ fabrics: string[],
+ countries: [],
+ colors: [],
+ cost_price: number,
+ categories: string[],
+ sub_categories: string[],
+ sizes: string[],
+ gender: string[]
+
+}
+
+interface ProductsProps {
+  products: ProductType[];
+}
 
 const cloudName = "jokoyoski";
 const uploadPreset = "jokoyoski";
@@ -55,187 +81,211 @@ const uploadToCloudinary = async (file: File): Promise<string | null> => {
 };
 
 function page() {
+  const [products, setProducts] = useState<ProductType[]>([]);
   const [productName, setProductName] = useState("");
   const [sku, setSku] = useState("");
-  const [description, setDescription] = useState("");
-  const [careInstructions, setCareInstructions] = useState("");
-  const [materials, setMaterials] = useState("");
-  const [price, setPrice] = useState<number>(0);
-  const [comparePrice, setComparePrice] = useState<number>(0);
-  const [inventory, setInventory] = useState<number>(0);
-  const [images, setImages] = useState<string[]>([]);
-  const [colors, setColors] = useState<string[]>([]);
-  const [sizes, setSizes] = useState<string[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
-  const [gender, setGender] = useState<string>("");
-  const [loading, setLoading] = useState(false);
-  const [imageUploading, setImageUploading] = useState(false);
+    const [description, setDescription] = useState("");
+    const [careInstructions, setCareInstructions] = useState("");
+    const [materials, setMaterials] = useState<string[]>([]);
+    const [price, setPrice] = useState<number>(0);
+    const [comparePrice, setComparePrice] = useState<number>(0);
+    const [inventory, setInventory] = useState<number>(0);
+    const [images, setImages] = useState<string[]>([]);
+    const [colors, setColors] = useState<string[]>([]);
+    const [sizes, setSizes] = useState<string[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState<string>("");
+    const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
+    const [gender, setGender] = useState<string[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [imageUploading, setImageUploading] = useState(false);
+  const [productLoading, setProductLoading] = useState(true);
+
+  const {_id} = useParams();
+  useEffect(() => {
+      const getProducts = async () => {
+        const res = await fetchProducts(1, 100);
+        console.log(res);
+        setProducts(res?.data?.data || []); // <---- Save into state
+      };
+      getProducts();
+    }, []);
 
 
-  // Category and subcategory data
-  const categories: Record<string, string[]> = {
-    Clothing: ["T-Shirts", "Jeans", "Dresses", "Jackets", "Sweaters"],
-    Bags: ["Handbags", "ToteBags", "Backpacks", "Clutches"],
-    Footwear: ["Sneakers", "Sandals", "Boots", "Heels"],
-    Beauty: ["Makeup", "Skincare", "Fragrance"],
-  };
 
-  // Map gender labels to backend IDs
-  const genderOptions = [
-    { label: "Select Gender", value: "" }, // default placeholder
-    { label: "Male", value: "691b26cc3ef7db6e39a860d2" },
-    { label: "Female", value: "691b26bf3ef7db6e39a860d1" },
-    // Optionally, you can add Unisex if your backend supports it
-  ];
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        const toastId = toast.loading("Uploading images...");
+        setImageUploading(true);
+    
+        const uploadedUrls: string[] = [];
+    
+        for (const file of files) {
+          const url = await uploadToCloudinary(file);
+          if (url) uploadedUrls.push(url);
+        }
+    
+        setImages((prev) => [...prev, ...uploadedUrls]);
+        setImageUploading(false);
+        toast.update(toastId, {
+        render: "Images uploaded successfully!",
+        type: "success",
+        isLoading: false,
+        autoClose: 2000,
+      });
+    
+      };
+    
+      const [queryParams, setQueryParams] = useState<CategoryQueryParams>({
+        page_number: 1,
+        page_size: 10,
+        filter: {
+          search_term: null,
+          countries: {
+            $in: [],
+          },
+        },
+        sort_field: "name",
+        sort_direction: 1,
+      });
+    
+      const {
+        data: categoriesArray = [],
+        isLoading,
+        isError,
+        error,
+      } = useCategories(queryParams);
+    
+      const {
+        data: subCategoriesArray = [],
+        isLoading: subCategoryLoader,
+        isError: subCategoryIsError,
+        error: subCategoryError,
+      } = useSubCategories();
+    
+      const {
+        data: gendersArray = [],
+        isLoading: genderLoading,
+        isError: isGenderError,
+        error: genderError,
+      } = useFetchGenders();
+    
+      const {
+        data: sizesArray = [],
+        isLoading: sizesLoading,
+        isError: sizesIsError,
+        error: sizesError,
+      } = useFetchSizes();
+    
+      const {
+        data: colorsArray = [],
+        isLoading: colorsLoader,
+        isError: colorIsError,
+        error: colorError,
+      } = useFetchColors();
+      // complete fetch categories
+    
+      // ✅ fix #3: strongly type list arguments
+      const toggleSelection = (
+        item: string,
+        list: string[],
+        setList: React.Dispatch<React.SetStateAction<string[]>>
+      ) => {
+        if (list.includes(item)) {
+          setList(list.filter((i) => i !== item));
+        } else {
+          setList([...list, item]);
+        }
+      };
 
-  // Get the subcategories based on selected category
-  const subCategories = selectedCategory ? categories[selectedCategory] : [];
+    
+      
 
-  const availableColors: string[] = ["Black", "White", "Blue", "Red", "Green"];
 
-  // ✅ fix #1: add proper event type
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const toastId = toast.loading("Uploading images...");
-    setImageUploading(true);
+// Update your useEffect for pre-filling product data
+useEffect(() => {
+  if (!products.length) return;
 
-    const uploadedUrls: string[] = [];
+  const foundProduct = products.find((p) => p._id === _id);
+  if (!foundProduct) return;
 
-    for (const file of files) {
-      const url = await uploadToCloudinary(file);
-      if (url) uploadedUrls.push(url);
-    }
+  setProductName(foundProduct.name);
+  setSku(foundProduct.sku);
+  setDescription(foundProduct.description);
+  setCareInstructions(foundProduct.look_after_me);
+  setMaterials(foundProduct.fabrics || []);
+  setPrice(foundProduct.discounted_price);
+  setComparePrice(foundProduct.cost_price);
+  setInventory(foundProduct.quantity);
+  setImages(foundProduct.images || []);
+  setSelectedCategory(foundProduct.categories?.[0] || "");
+  setSelectedSubCategory(foundProduct.sub_categories?.[0] || "");
+  setGender(foundProduct.gender || []);
+  setColors(foundProduct.colors || []);
+  setSizes(foundProduct.sizes || []);
 
-    setImages((prev) => [...prev, ...uploadedUrls]);
-    setImageUploading(false);
-    toast.update(toastId, {
-    render: "Images uploaded successfully!",
-    type: "success",
-    isLoading: false,
-    autoClose: 2000,
-  });
+  setProductLoading(false); // ✅ Stop loading when data is ready
+}, [products]);
 
-  };
+       
+   const product = products.find((p) => p?._id === _id);
 
-  const [queryParams, setQueryParams] = useState<CategoryQueryParams>({
-    page_number: 1,
-    page_size: 10,
-    filter: {
-      search_term: null,
-      countries: {
-        $in: [],
-      },
-    },
-    sort_field: "name",
-    sort_direction: 1,
-  });
-
-  const {
-    data: categoriesArray = [],
-    isLoading,
-    isError,
-    error,
-  } = useCategories(queryParams);
-
-  const {
-    data: subCategoriesArray = [],
-    isLoading: subCategoryLoader,
-    isError: subCategoryIsError,
-    error: subCategoryError,
-  } = useSubCategories();
-
-  const {
-    data: gendersArray = [],
-    isLoading: genderLoading,
-    isError: isGenderError,
-    error: genderError,
-  } = useFetchGenders();
-
-  const {
-    data: sizesArray = [],
-    isLoading: sizesLoading,
-    isError: sizesIsError,
-    error: sizesError,
-  } = useFetchSizes();
-
-  const {
-    data: colorsArray = [],
-    isLoading: colorsLoader,
-    isError: colorIsError,
-    error: colorError,
-  } = useFetchColors();
-  // complete fetch categories
-
-  // ✅ fix #3: strongly type list arguments
-  const toggleSelection = (
-    item: string,
-    list: string[],
-    setList: React.Dispatch<React.SetStateAction<string[]>>
-  ) => {
-    if (list.includes(item)) {
-      setList(list.filter((i) => i !== item));
-    } else {
-      setList([...list, item]);
-    }
-  };
-
-  const handleCreateProduct = async () => {
-    if (
-      !productName ||
-      !selectedCategory ||
-      !selectedSubCategory ||
-      !gender ||
-      !description ||
-      !inventory ||
-      !price
-    ) {
-      toast.error("Please fill all required fields");
-      return;
-    }
-
-    setLoading(true);
-
-    const productData = {
-      name: productName,
-      images,
-      cost_price: price,
-      description,
-      genders: [gender],
-      sizes,
-      look_after_me: careInstructions,
-      colors,
-      fabrics: [materials],
-      discounted_price: comparePrice,
-      countries: ["68fc2044c642a564a546feda"],
-      quantity: inventory,
-      sub_categories: [selectedSubCategory],
-      categories: [selectedCategory],
-    };
-
-    const res = await createProduct(productData);
-
-    if (res.success) {
-      toast.success("Product created successfully!");
-      // Reset form or redirect
-    } else {
-      toast.error(res.message);
-      console.log(res.message);
-    }
-
-    setLoading(false);
-  };
-
+   const handleUpdateProduct= async () => {
+       if (
+         !productName ||
+         !selectedCategory ||
+         !selectedSubCategory ||
+         !gender ||
+         !description ||
+         !inventory ||
+         !price
+       ) {
+         toast.error("Please fill all required fields");
+         return;
+       }
+   
+       setLoading(true);
+   
+       const productData = {
+         name: productName,
+         images,
+         cost_price: price,
+         description,
+         genders: [gender],
+         sizes,
+         look_after_me: careInstructions,
+         colors,
+         fabrics: [materials],
+         discounted_price: comparePrice,
+         countries: ["68fc2044c642a564a546feda"],
+         quantity: inventory,
+         sub_categories: [selectedSubCategory],
+         categories: [selectedCategory],
+       };
+   
+       const res = await updateProduct(productData, _id);
+   
+       if (res.success) {
+         toast.success("Product updated successfully!");
+         // Reset form or redirect
+       } else {
+         toast.error(res.message);
+         console.log(res.message);
+       }
+   
+       setLoading(false);
+     };
+    
   return (
     <section className="bg-gray-100 min-h-screen px-4  md:px-8 py-6 w-full">
       <div className="w-full md:w-[600px] lg:w-[750px] ">
+
         <div className="flex justify-between">
           <div>
             <h1 className="text-black font-semibold text-xl">
-              Product Catalog Upload
+              Product Catalog Udate
             </h1>
             <p className="text-gray-500 text-[13px] mb-2">
-              Add new products to your inventory with detailed information
+              update yout products to your inventory with detailed information
             </p>
           </div>
           <Link href="/">
@@ -244,7 +294,32 @@ function page() {
             </button>
           </Link>
         </div>
+
+
         <div className="border-2 border-gray-200 bg-white mt-5 p-4">
+          {productLoading ? (
+    // Skeleton Loader
+    <div className="animate-pulse space-y-4">
+      <div className="h-6 w-3/5 bg-gray-200 rounded"></div>
+      <div className="h-6 w-2/5 bg-gray-200 rounded"></div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div className="h-10 bg-gray-200 rounded"></div>
+        <div className="h-10 bg-gray-200 rounded"></div>
+      </div>
+      <div className="h-32 bg-gray-200 rounded mt-4"></div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+        <div className="h-10 bg-gray-200 rounded"></div>
+        <div className="h-10 bg-gray-200 rounded"></div>
+        <div className="h-10 bg-gray-200 rounded"></div>
+      </div>
+      <div className="h-28 bg-gray-200 rounded mt-4"></div>
+      <div className="flex gap-2 mt-4">
+        <div className="h-10 w-28 bg-gray-200 rounded"></div>
+        <div className="h-10 w-28 bg-gray-200 rounded"></div>
+      </div>
+    </div>
+  ) : (
+    <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5 w-full">
               <label
@@ -349,7 +424,10 @@ function page() {
               <select
                 id="gender"
                 value={gender}
-                onChange={(e) => setGender(e.target.value)}
+               onChange={(e) => {
+    const selected = Array.from(e.target.selectedOptions, option => option.value);
+    setGender(selected);
+  }}
                 className="border border-gray-300 text-sm text-gray-600 p-2 focus:outline-none focus:ring-2 focus:ring-black"
               >
                 <option value="">
@@ -391,15 +469,12 @@ function page() {
                 Materials/Fabric *
               </label>
               <input
-                type="text"
-                name=""
-                id=""
-                value={materials}
-                onChange={(e) => setMaterials(e.target.value)}
-                placeholder="Cotton, Polyster, Silk etc."
-                className="
-             text-gray-500 p-1 text-sm border border-gray-300 focus:ring-0"
-              />
+  type="text"
+  value={materials.join(", ")}  // convert array to string
+  onChange={(e) => setMaterials(e.target.value.split(",").map(m => m.trim()))} 
+  placeholder="Cotton, Polyester, Silk etc."
+/>
+
             </div>
             <div className="flex flex-col gap-1.5 w-full">
               <label
@@ -577,22 +652,25 @@ function page() {
               Save as Draft
             </button>
             <div className="flex items-center gap-2">
-              <button className="bg-inherit border border-black text-black p-[5px] w-[120px] text-sm">
-                Preview Product
-              </button>
+              
               <button
-                onClick={handleCreateProduct}
+                onClick={handleUpdateProduct}
                 disabled={loading}
                 className="bg-black text-white p-[5px] w-[120px] text-sm"
               >
-                {loading ? "Publishing..." : "Publish Product"}
+                {loading ? "Updating..." : "Update Product"}
               </button>
             </div>
           </div>
+           </>
+           )}
+           
         </div>
-      </div>
-    </section>
+           
+           </div>
+    </section>    
+    
   );
 }
 
-export default page;
+export default page

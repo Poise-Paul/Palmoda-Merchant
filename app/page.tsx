@@ -8,10 +8,24 @@ import ProtectedRoute from './_components/ProtectedRoute'
 import {fetchProducts} from "./_lib/product"
 import { useAuth } from './_lib/AuthContext';
 
+// Add this at the top of your file
+interface ProductType {
+  _id: string;
+  name: string;
+  discounted_price: number;
+  status: string;
+  quantity: number;
+  images: string[];
+}
+
+// Then type your state properly:
+
+
+
 function page() {
   const { user, logout } = useAuth();
   const [businessName, setBusinessName] = useState("");
-   const [products, setProducts] = useState([]);
+   const [products, setProducts] = useState<ProductType[]>([]);
 
   useEffect(() => {
      setBusinessName(user?.business_name || "");
@@ -43,10 +57,21 @@ function page() {
              </Link>
             </div>
         <DashboardGrid  products={products} /> 
-        <div className='flex gap-2'>
-          <Products products={products} /> 
-          <ProductsDetails />
-        </div>   
+
+       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+  
+  {/* Products – takes 2 columns */}
+  <div className="col-span-1 lg:col-span-2">
+    <Products products={products}  setProducts={setProducts} />
+  </div>
+
+  {/* Details – takes 1 column */}
+  <div className="col-span-1 lg:col-span-1">
+    <ProductsDetails />
+  </div>
+
+</div>
+
     </section>
     </ProtectedRoute>
   )
