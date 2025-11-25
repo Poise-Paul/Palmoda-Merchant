@@ -109,9 +109,10 @@ function Page() {
   };
 
   // If user is pending verification, show code component
-  if (pendingVerification) {
-    return <VerifyVendorCode email={email} onVerified={handleVerified} />;
-  }
+  // Check message on Backend to show this instead
+  // if (pendingVerification) {
+  //   return <VerifyVendorCode email={email} onVerified={handleVerified} />;
+  // }
 
   return (
     <div
