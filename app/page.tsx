@@ -30,10 +30,8 @@ function page() {
 
   useEffect(() => {
     setBusinessName(user?.business_name || "");
+    console.log(user?.business_name);
   }, [user]);
-
-  setBusinessName(user?.business_name || "");
-  console.log(user?.business_name);
 
   useEffect(() => {
     const fetchBrand = async () => {
