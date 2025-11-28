@@ -551,7 +551,6 @@ if (!allDocsVerified) {
                     style={{ backgroundColor: color.code }}
                   ></button>
                 ))}
-                {/* Hide Color Add Button */}
                 <button
                   onClick={() => setShowColorModal(true)}
                   className="w-7 h-7 rounded-full border border-gray-400 flex items-center 
