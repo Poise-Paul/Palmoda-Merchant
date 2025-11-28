@@ -3,25 +3,30 @@ import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
 import ProtectedRoute from '../_components/ProtectedRoute'
 import { toast } from 'react-toastify';
-import { getKycDetails, activateWallet } from '../_lib/vendor';
+import { getKycDetails, activateWallet, getWallet } from '../_lib/vendor';
 import { useAuth } from '../_lib/AuthContext';
 
 function page() {
    const {user} = useAuth();
  const [bankName, setBankName] = useState("");
    const [accountHolder, setAccountHolder] = useState("");
+   const [amountError, setAmountError] = useState("");
    const [accountNumber, setAccountNumber] = useState("");
+   const [accountBalance, setAccountBalance] = useState(0.0)
     const [loading, setLoading] = useState(false);
     const [showBvnModal, setShowBvnModal] = useState(false);
 const [bvn, setBvn] = useState("");
  const [activating, setActivating] = useState(false);
+ const [amount, setAmount] = useState("");
+const [fee] = useState(6); // fixed fee for now
+
 
 
    useEffect(() => {
-       const fetchKyc = async () => {
+       const fetchWallet = async () => {
          setLoading(true);
          try {
-           const res = await getKycDetails();
+           const res = await getWallet();
            console.log(res);
            if (res.success === false) {
              toast.error(res.message);
@@ -30,6 +35,7 @@ const [bvn, setBvn] = useState("");
              setBankName(res.data.bank_name || "");
              setAccountHolder(res.data.account_holder_name || "");
              setAccountNumber(res.data.account_number || "");
+             setAccountBalance(res.data.available_balance);
            }
          } catch (err: any) {
            toast.error(err?.message || "Failed to fetch KYC details");
@@ -38,7 +44,7 @@ const [bvn, setBvn] = useState("");
          }
        };
    
-       fetchKyc();
+       fetchWallet();
      }, []);
 
      const handleActivate = async () => {
@@ -61,7 +67,7 @@ const [bvn, setBvn] = useState("");
     setShowBvnModal(false);
 
     // Refresh KYC details so UI updates
-    const refreshed = await getKycDetails();
+    const refreshed = await getWallet();
     if (refreshed.success) {
       setBankName(refreshed.data.bank_name || "");
       setAccountHolder(refreshed.data.account_holder_name || "");
@@ -89,12 +95,12 @@ const [bvn, setBvn] = useState("");
        </div>
        <div className='bg-white px-3 py-1 rounded-[6px]'>
         <p className='text-xs text-gray-500'>Available Balance</p>
-        <h1 className='text-black font-semibold text-lg'>$6,842.00</h1>
-        <p className='text-xs text-gray-500'>Next settlement: Today    Minimum withdrawal: $50</p>
+        <h1 className='text-black font-semibold text-lg'> ₦{accountBalance}</h1>
+        <p className='text-xs text-gray-500'>Next settlement: Today    Minimum withdrawal:  ₦5000</p>
         
         {user?.is_wallet_activated ? <h3 className='text-xs text-black my-3'>Wallet activated</h3>  : <button
   onClick={() => setShowBvnModal(true)}
-  className="bg-purple-600 text-white text-xs px-3 py-1 mb-2 rounded-md mt-2"
+  className="bg-purple-600 text-white text-xs px-3 py-1 mb-2 rounded-md m\t-2"
 >
   Add BVN
 </button>}
@@ -131,29 +137,96 @@ const [bvn, setBvn] = useState("");
              <h1 className='text-black font-semibold'>Withdrawal Details</h1>
              <div className='flex gap-1 my-2 flex-col'>
               <label className='text-gray-500 text-xs' htmlFor="">Amount to withdraw</label>
-               <input type="number" name="" id=""  className='text-gray-500 border border-gray-600 p-2 rounded-[5px] text-xs'/>
+              <input
+  type="number"
+  value={amount}
+  onChange={(e) => {
+    let val = e.target.value;
+
+    if (val === "") {
+      setAmount("");
+      setAmountError("");
+      return;
+    }
+
+    let num = Number(val);
+
+    // negative
+    if (num < 0) {
+      setAmountError("Amount cannot be negative.");
+      return;
+    }
+
+    // more than balance
+    if (num > accountBalance) {
+      setAmountError("You cannot withdraw more than your account balance.");
+      return;
+    }
+
+    // clear error when valid
+    setAmountError("");
+    setAmount(val);
+  }}
+  className='text-gray-500 border border-gray-600 p-2 rounded-[5px] text-xs'
+/>
+
+{amountError && (
+  <p className="text-red-500 text-[11px] mt-1">{amountError}</p>
+)}
+
+
              </div>
 
-               <div className='flex gap-3 my-2.5'>
-                <p className='text-gray-900 p-2 rounded-[5px] bg-gray-200 text-xs'>WithDraw Full Balance</p>
-                <p className='text-gray-900 p-2 rounded-[5px] bg-gray-200 text-xs'>Withdraw 50% of Balance</p>
-                <p className='text-gray-900 p-2 rounded-[5px] bg-gray-200 text-xs'>Custom</p>
-               </div>
-            <div className='bg-gray-200 px-2 py-1 mb-3 rounded-[5px]'>
-               <div className='flex justify-between items-center'>
-                 <p className='text-gray-500 text-xs'>Available balance:</p>
-                 <h1 className=' text-black text-sm font-semibold'>$6,842.00</h1>
-               </div>
-               <div className='flex justify-between items-center'>
-                <p className='text-gray-500 text-xs'>Transaction fee:</p>
-                 <h1 className=' text-black text-sm font-semibold'>$6</h1>
-               </div>
-               <hr className='my-2 text-gray-500'/>
-               <div className='flex justify-between items-center'>
-                <p className='text-black text-xs'>You will receive:</p>
-                 <h1 className=' text-black text-sm font-semibold'>$6,837.00</h1>
-               </div>
-            </div>
+              <div className='flex gap-3 my-2.5'>
+  <button
+    className='text-gray-900 p-2 rounded-[5px] bg-gray-200 text-xs'
+    onClick={() => setAmount(accountBalance.toString())}
+  >
+    Withdraw Full Balance
+  </button>
+
+  <button
+    className='text-gray-900 p-2 rounded-[5px] bg-gray-200 text-xs'
+    onClick={() => setAmount((accountBalance * 0.5).toFixed(2))}
+  >
+    Withdraw 50% of Balance
+  </button>
+
+  <button
+    className='text-gray-900 p-2 rounded-[5px] bg-gray-200 text-xs'
+    onClick={() => setAmount("")}
+  >
+    Custom
+  </button>
+</div>
+
+           <div className='bg-gray-200 px-2 py-1 mb-3 rounded-[5px]'>
+  <div className='flex justify-between items-center'>
+    <p className='text-gray-500 text-xs'>Available balance:</p>
+    <h1 className=' text-black text-sm font-semibold'>
+      ₦{accountBalance.toLocaleString()}
+    </h1>
+  </div>
+
+  <div className='flex justify-between items-center'>
+    <p className='text-gray-500 text-xs'>Transaction fee:</p>
+    <h1 className=' text-black text-sm font-semibold'>₦{fee}</h1>
+  </div>
+
+  <hr className='my-2 text-gray-500'/>
+
+  <div className='flex justify-between items-center'>
+    <p className='text-black text-xs'>You will receive:</p>
+    <h1 className=' text-black text-sm font-semibold'>
+      ₦{
+        amount === "" 
+          ? "0.00" 
+          : Math.max(Number(amount) - fee, 0).toLocaleString()
+      }
+    </h1>
+  </div>
+</div>
+
           </div>
           <div className='bg-white mb-4 px-4 my-4 rounded-[6px] py-2'>
             <h1 className='text-black font-semibold'>Notes (optional)</h1>
@@ -161,7 +234,13 @@ const [bvn, setBvn] = useState("");
           </div>
           <div className='flex items-center justify-end gap-3'>
            <button className='bg-inherit text-black text-xs'>Cancel</button>
-           <button className='bg-gray-300 text-gray-900 p-2 text-xs rounded-[5px]'>Confirm Withdrawal</button>
+          <button
+  disabled={!amount || Number(amount) > accountBalance}
+  className='bg-gray-300 text-gray-900 p-2 text-xs rounded-[5px]'
+>
+  Confirm Withdrawal
+</button>
+
           </div>
        </div>
 

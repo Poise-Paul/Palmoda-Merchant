@@ -1,37 +1,107 @@
 "use client";
 import Link from 'next/link';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { CiBank } from 'react-icons/ci';
 import { FaCheckCircle, FaClock, FaHourglassHalf } from "react-icons/fa";
 import { LuWarehouse } from "react-icons/lu";
 import PayoutFailed from '../PayoutFailed';
 import WithdrawalSubmitted from '../WithDrawalSubmitted';
+import { useParams } from 'next/navigation';
+import {PayoutType} from "../../_lib/type"
+import {getTransactionById} from "../../_lib/transactions"
+
+// Map status → icon, color, message
+const getStatusDisplay = (status: string) => {
+  switch (status?.toLowerCase()) {
+    case "successful":
+    case "success":
+      return {
+        icon: <FaCheckCircle className="text-green-500 text-lg absolute -left-6" />,
+        label: "Successful",
+        message: "Your payout has been successfully processed.",
+        color: "text-green-500"
+      };
+
+    case "pending":
+      return {
+        icon: <FaHourglassHalf className="text-yellow-500 text-lg absolute -left-6" />,
+        label: "Pending",
+        message: "Your payout is pending and awaiting bank confirmation.",
+        color: "text-yellow-500"
+      };
+
+    case "failed":
+      return {
+        icon: <FaClock className="text-red-500 text-lg absolute -left-6" />,
+        label: "Failed",
+        message: "Your payout request failed.",
+        color: "text-red-500"
+      };
+
+    default:
+      return {
+        icon: <FaClock className="text-gray-400 text-lg absolute -left-6" />,
+        label: "Unknown",
+        message: "Status not available.",
+        color: "text-gray-400"
+      };
+  }
+};
+
 
 function page() {
   
-    
+    const {_id} = useParams();
+     const [loading, setLoading] = useState(false);
+     const [transaction, setTransaction] = useState<PayoutType | null>(null);
+     const [error, setError] = useState("");
+
+    useEffect(() => {
+    const fetchTransaction = async () => {
+      setLoading(true);
+
+      try {
+        const res = await getTransactionById(_id);
+        console.log(res);
+
+        if (res?.data?.data) {
+          setTransaction(res.data.data);
+        } else {
+          setError("No transaction found");
+        }
+      } catch (err) {
+        setError("Failed to fetch transaction");
+      }
+
+      setLoading(false);
+    };
+
+    fetchTransaction();
+  }, [_id]);
+
+
   
 
   return (
     <section className="bg-gray-200  min-h-screen px-4 md:px-8 py-6 w-full">
       <div className='w-[500px] mx-auto bg-white rounded-[6px] px-4 py-3'>
-           <h1 className='text-sm text-black font-semibold'>Payout Details – PM-WD-872391</h1>
+           <h1 className='text-sm text-black font-semibold'>Payout Details – {transaction?.transaction_reference} </h1>
            <div className='flex flex-col justify-center text-center my-4'>
               <p className='text-xs text-gray-500'>Amount withdrawn</p>
-              <h1 className='text-2xl text-black font-semibold'>$6,837.00</h1>
+              <h1 className='text-2xl text-black font-semibold'>₦{transaction?.amount}</h1>
            </div>
            <div className='my-4 flex flex-col gap-3'>
              <div className='flex justify-between'>
                <p className='text-gray-500 text-xs'>Transaction fee</p>
-               <h3 className='text-black text-xs'>$5.00</h3>
+               <h3 className='text-black text-xs'>₦6</h3>
              </div>
                <div className='flex justify-between'>
                <p className='text-gray-500 text-xs'>You will receive</p>
-               <h3 className='text-black text-xs'>$6,837.00</h3>
+               <h3 className='text-black text-xs'>₦{transaction?.amount}</h3>
              </div>
              <div className='flex justify-between'>
                <p className='text-gray-500 text-xs'>Requested on</p>
-               <h3 className='text-black text-xs'>May 14, 2025 • 10:42 AM</h3>
+               <h3 className='text-black text-xs'>{transaction?.created_at}</h3>
              </div>
              <div className='flex justify-between'>
                <p className='text-gray-500 text-xs'>Estimated settlement</p>

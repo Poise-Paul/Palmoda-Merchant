@@ -86,3 +86,16 @@ export interface Product {
   rejection_reason?: string;
 }
 
+export interface PayoutType {
+  _id: string;
+  vendor_id: string;
+  amount: number;
+  transaction_reference: string;
+  status: "pending" | "successful" | "failed";
+  narration: string;
+  transaction_type: "debit" | "credit";
+  created_at: string;
+  updated_at: string;
+  rejection_reason?: string;
+  vendor: Vendor;
+}
