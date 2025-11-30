@@ -5,7 +5,8 @@ import ProtectedRoute from "../_components/ProtectedRoute";
 import { toast } from "react-toastify";
 import { getKycDetails, activateWallet, getWallet } from "../_lib/vendor";
 import { useAuth } from "../_lib/AuthContext";
-import { requestPayout } from "../_lib/transactions";
+import { getTransactions, requestPayout } from "../_lib/transactions";
+import { TransactionType } from "../_lib/type";
 
 function page() {
   const { user } = useAuth();
@@ -22,29 +23,8 @@ function page() {
   const [fee] = useState(0); // fixed fee for now
   const [narration, setNarration] = useState("");
   const [requesting, setRequesting] = useState(false);
-
-  useEffect(() => {
-    const fetchKyc = async () => {
-      setLoading(true);
-      try {
-        const res = await getKycDetails();
-        console.log(res);
-        if (res.success === false) {
-          toast.error(res.message);
-        } else {
-          // Populate form fields
-          setBankName(res.data.bank_name || "");
-          setAccountHolder(res.data.account_holder_name || "");
-          setAccountNumber(res.data.account_number || "");
-        }
-      } catch (err: any) {
-        toast.error(err?.message || "Failed to fetch KYC details");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchKyc(); // Make sure to call the function inside useEffect
-  }, []);
+  const [transactions, setTransactions] = useState<TransactionType[]>([]);
+  const [fetching, setFetching] = useState(false);
 
   useEffect(() => {
     const fetchWallet = async () => {
@@ -71,6 +51,22 @@ function page() {
     fetchWallet();
   }, []);
 
+  useEffect(() => {
+    const fetchTransacs = async () => {
+      setFetching(true);
+      try {
+        const res = await getTransactions();
+        const trans: TransactionType[] = res?.data?.data?.transactions ?? [];
+        setTransactions(trans);
+      } catch (error: any) {
+        toast.error(error?.message || "Failed to fetch transactions");
+      } finally {
+        setFetching(false);
+      }
+    };
+    fetchTransacs();
+  }, []);
+
   const handleActivate = async () => {
     if (bvn.length !== 11) {
       toast.error("BVN must be 11 digits.");
@@ -80,6 +76,13 @@ function page() {
     try {
       setActivating(true);
 
+      const res = await activateWallet(bvn);
+
+      if (!res.success) {
+        toast.error(res.message || "Failed to activate wallet");
+        return;
+      }
+
       // Refresh KYC details so UI updates
       const refreshed = await getWallet();
       if (refreshed.success) {
@@ -87,12 +90,14 @@ function page() {
         setAccountHolder(refreshed.data.account_holder_name || "");
         setAccountNumber(refreshed.data.account_number || "");
       }
+      toast.success("Wallet activated successfully");
+      setShowBvnModal(false); // Close modal on success
     } catch (error: any) {
       toast.error(error.message || "Failed to activate wallet");
     } finally {
       setActivating(false);
     }
-  }; // <--- THIS CLOSING BRACE WAS MISSING
+  };
 
   const last4Digits = accountNumber.slice(-4);
 
@@ -142,7 +147,7 @@ function page() {
 
   return (
     <ProtectedRoute>
-      <section className="bg-gray-100 min-h-screen px-4  md:px-8 py-6 w-full">
+      <section className="bg-gray-100 min-h-screen px-4 md:px-8 py-6 w-full">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-black font-semibold text-lg">Withdraw Funds</h1>
@@ -154,7 +159,7 @@ function page() {
             <p className="text-xs text-gray-500">Available Balance</p>
             <h1 className="text-black font-semibold text-lg">
               {" "}
-              ₦{accountBalance}
+              ₦{accountBalance.toLocaleString()}
             </h1>
             <p className="text-xs text-gray-500">
               Next settlement: Today Minimum withdrawal: ₦5000
@@ -172,8 +177,11 @@ function page() {
             )}
           </div>
         </div>
-        <div className="flex gap-3 items-start mt-6 ">
-          <div className="w-full ">
+
+        {/* Main Content Area */}
+        <div className="flex gap-3 items-start mt-6">
+          {/* Left Column - Withdrawal Forms */}
+          <div className="flex-1 w-full">
             <div className="bg-white px-4 my-2 rounded-[6px] py-2">
               <h1 className="text-black font-semibold">Payout Account</h1>
               {loading ? (
@@ -230,7 +238,7 @@ function page() {
                     }
 
                     setAmountError("");
-                    setAmount(num); // ← ALWAYS SET AS NUMBER
+                    setAmount(num);
                   }}
                   className="text-gray-500 border border-gray-600 p-2 rounded-[5px] text-xs"
                 />
@@ -286,6 +294,7 @@ function page() {
                 </div>
               </div>
             </div>
+
             <div className="bg-white mb-4 px-4 my-4 rounded-[6px] py-2">
               <h1 className="text-black font-semibold">Notes (optional)</h1>
               <textarea
@@ -296,6 +305,7 @@ function page() {
                 className="px-4 py-2 text-gray-500 border w-full my-4 border-gray-200"
               ></textarea>
             </div>
+
             <div className="flex items-center justify-end gap-3">
               <button className="bg-inherit text-black text-xs">Cancel</button>
               <button
@@ -313,7 +323,111 @@ function page() {
               </button>
             </div>
           </div>
+
+          {/* Right Column - Recent Payouts */}
+          <div className="w-[30%] bg-white px-4 my-2 rounded-[6px] py-2 h-fit hidden md:block">
+            <h1 className="text-black font-semibold">Recent Payouts</h1>
+
+            {fetching ? (
+              // Skeleton loader while fetching
+              <>
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="my-2 border-b border-gray-200 px-3 flex justify-between py-1 animate-pulse"
+                  >
+                    <div>
+                      <h1 className="text-black text-sm font-semibold bg-gray-200 h-4 w-20 mb-1"></h1>
+                      <p className="text-gray-500 text-xs bg-gray-200 h-3 w-16 mb-1"></p>
+                      <p className="text-gray-500 text-xs bg-gray-200 h-3 w-20"></p>
+                    </div>
+                    <p className="text-green-500 text-xs bg-gray-200 h-3 w-10"></p>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <>
+                {transactions.slice(0, 3).map((txn) => (
+                  <div
+                    key={txn._id}
+                    className="my-2 border-b border-gray-200 px-3 flex justify-between py-1"
+                  >
+                    <div>
+                      <h1 className="text-black text-sm font-semibold">
+                        ₦{txn.amount.toLocaleString()}
+                      </h1>
+                      <p className="text-gray-500 text-xs">
+                        {new Date(txn.created_at).toLocaleDateString()}
+                      </p>
+                      <p className="text-gray-500 text-xs">
+                        Ref: {txn.transaction_reference}
+                      </p>
+                    </div>
+                    <p
+                      className={`text-xs ${
+                        txn.status.toLowerCase() === "successful"
+                          ? "text-green-500"
+                          : txn.status.toLowerCase() === "pending"
+                            ? "text-yellow-500"
+                            : "text-red-500"
+                      }`}
+                    >
+                      {txn.status.charAt(0).toUpperCase() + txn.status.slice(1)}
+                    </p>
+                  </div>
+                ))}
+              </>
+            )}
+
+            <Link
+              href="/payouts/history"
+              className="text-blue-400 text-xs underline my-2 block"
+            >
+              View History
+            </Link>
+          </div>
         </div>
+
+        {/* Modal */}
+        {showBvnModal && (
+          <div className="fixed inset-0 bg-white/20 backdrop-blur-sm flex justify-center items-center z-50">
+            <div className="bg-white rounded-md p-6 w-[90%] max-w-sm shadow-lg">
+              <h1 className="text-black font-semibold text-lg mb-2 text-center">
+                Activate Wallet
+              </h1>
+              <p className="text-gray-500 text-xs text-center mb-4">
+                Enter your BVN to activate your withdrawal wallet.
+              </p>
+
+              <input
+                type="number"
+                maxLength={11}
+                value={bvn}
+                onChange={(e) => {
+                  if (e.target.value.length <= 11) setBvn(e.target.value);
+                }}
+                className="w-full border border-gray-300 px-3 py-2 rounded-md text-sm outline-none"
+                placeholder="Enter 11-digit BVN"
+              />
+
+              <div className="flex justify-end gap-3 mt-5">
+                <button
+                  onClick={() => setShowBvnModal(false)}
+                  className="text-gray-600 text-xs"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={handleActivate}
+                  className="bg-black text-white text-xs px-4 py-2 rounded-md"
+                >
+                  {activating ? "Activating..." : "Submit"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
     </ProtectedRoute>
   );
