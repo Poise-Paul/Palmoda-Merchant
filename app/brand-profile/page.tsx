@@ -168,7 +168,7 @@ const BrandProfilePage = () => {
       }
 
       toast.success("Brand Profile has been submitted for review");
-      router.push("/");
+      // router.push("/");
       setBrandExists(true); // After creation, show update button next time
     } catch (err: any) {
       toast.error(err?.message || "An error occurred");

@@ -133,7 +133,7 @@ const router = useRouter();
         setImages((prev) => [...prev, ...uploadedUrls]);
         setImageUploading(false);
         toast.update(toastId, {
-        render: "Images uploaded successfully!",
+        render: "Image uploaded successfully!",
         type: "success",
         isLoading: false,
         autoClose: 2000,
