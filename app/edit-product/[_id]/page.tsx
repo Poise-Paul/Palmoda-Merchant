@@ -133,7 +133,7 @@ const router = useRouter();
         setImages((prev) => [...prev, ...uploadedUrls]);
         setImageUploading(false);
         toast.update(toastId, {
-        render: "Images uploaded successfully!",
+        render: "Image uploaded successfully!",
         type: "success",
         isLoading: false,
         autoClose: 2000,
@@ -471,7 +471,7 @@ useEffect(() => {
     const selected = Array.from(e.target.selectedOptions, option => option.value);
     setGender(selected);
   }}
-  disabled={true}
+
                 className="border border-gray-300 
                 disabled:cursor-not-allowed
                 text-sm text-gray-600 p-2 focus:outline-none focus:ring-2 focus:ring-black"
