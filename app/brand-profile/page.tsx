@@ -55,6 +55,7 @@ const BrandProfilePage = () => {
   const [website, setWebsite] = useState("");
   const router = useRouter();
    const {user} = useAuth();
+   console.log(user);
   const isDisabled = user?.is_bank_information_verified || user?.is_business_verified || user?.is_identity_verified;
 
 
@@ -62,17 +63,21 @@ const BrandProfilePage = () => {
   const logoWhiteRef = useRef<HTMLInputElement | null>(null);
   const bannerRef = useRef<HTMLInputElement | null>(null);
 
+   const isEmptyObject = (obj: any) => {
+  return !obj || Object.values(obj).every(val => val === "" || val === null);
+};
+
+
   useEffect(() => {
   const fetchBrand = async () => {
     setLoading(true);
     try {
       const res = await getBrandDetails();
       console.log(res);
-
-      if (res.success === false || !res.data) {
+       const data = res.data;
+      if (res.success === false || !res.data || isEmptyObject(data)) {
         setBrandExists(false); // No brand exists
       } else {
-        const data = res.data;
         setBrandName(data.brand_name || "");
         setBrandDescription(data.brand_description || "");
         setLogoBlackUrl(data.brand_logo_black || "");
