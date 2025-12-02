@@ -1,17 +1,28 @@
 "use client";
-import React, { useRef, useState, ChangeEvent, useEffect } from 'react';
-import { FaFacebook, FaFileUpload, FaInstagram, FaPinterest, FaTiktok, FaTwitter } from 'react-icons/fa';
+import React, { useRef, useState, ChangeEvent, useEffect } from "react";
+import {
+  FaFacebook,
+  FaFileUpload,
+  FaInstagram,
+  FaPinterest,
+  FaTiktok,
+  FaTwitter,
+} from "react-icons/fa";
 import { RiPlanetFill } from "react-icons/ri";
 import { BiSolidInfoCircle } from "react-icons/bi";
-import BrandUploadBox from './BrandUploadBox';
+import BrandUploadBox from "./BrandUploadBox";
 import { toast } from "react-toastify";
-import axios from 'axios';
-import {setUpBrandProfile, getBrandDetails, updateBrandDetails} from "../_lib/brand"
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '../_lib/AuthContext';
+import axios from "axios";
+import {
+  setUpBrandProfile,
+  getBrandDetails,
+  updateBrandDetails,
+} from "../_lib/brand";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../_lib/AuthContext";
 
-const cloudName = "jokoyoski"; 
+const cloudName = "jokoyoski";
 const uploadPreset = "jokoyoski";
 
 const uploadToCloudinary = async (file: File): Promise<string | null> => {
@@ -34,7 +45,9 @@ const uploadToCloudinary = async (file: File): Promise<string | null> => {
     return res.data?.secure_url ?? null;
   } catch (e: any) {
     console.error("Cloudinary upload error:", e);
-    toast.error(e.response?.data?.error?.message || "Upload failed. Please try again.");
+    toast.error(
+      e.response?.data?.error?.message || "Upload failed. Please try again."
+    );
     return null;
   }
 };
@@ -54,53 +67,60 @@ const BrandProfilePage = () => {
   const [tiktok, setTiktok] = useState("");
   const [website, setWebsite] = useState("");
   const router = useRouter();
-   const {user} = useAuth();
-  const isDisabled = user?.is_bank_information_verified || user?.is_business_verified || user?.is_identity_verified;
-
+  const { user } = useAuth();
+  const isDisabled =
+    user?.is_bank_information_verified ||
+    user?.is_business_verified ||
+    user?.is_identity_verified;
 
   const logoBlackRef = useRef<HTMLInputElement | null>(null);
   const logoWhiteRef = useRef<HTMLInputElement | null>(null);
   const bannerRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-  const fetchBrand = async () => {
-    setLoading(true);
-    try {
-      const res = await getBrandDetails();
-      console.log(res);
+    const fetchBrand = async () => {
+      setLoading(true);
+      try {
+        const res = await getBrandDetails();
+        // console.log("Brand Details>>>", res);
 
-      if (res.success === false || !res.data) {
-        setBrandExists(false); // No brand exists
-      } else {
-        const data = res.data;
-        setBrandName(data.brand_name || "");
-        setBrandDescription(data.brand_description || "");
-        setLogoBlackUrl(data.brand_logo_black || "");
-        setLogoWhiteUrl(data.brand_logo_white || "");
-        setBannerUrl(data.brand_banner || "");
-        setInstagram(data.instagram_handle || "");
-        setFacebook(data.facebook_handle || "");
-        setTwitter(data.twitter_handle || "");
-        setPinterest(data.pinterest_handle || "");
-        setTiktok(data.tiktok_handle || "");
-        setWebsite(data.website_url || "");
+        if (
+          res.success === false ||
+          !res.data ||
+          Object.keys(res.data).length === 0
+        ) {
+          setBrandExists(false); // No brand exists
+        } else {
+          const data = res.data;
+          setBrandName(data.brand_name || "");
+          setBrandDescription(data.brand_description || "");
+          setLogoBlackUrl(data.brand_logo_black || "");
+          setLogoWhiteUrl(data.brand_logo_white || "");
+          setBannerUrl(data.brand_banner || "");
+          setInstagram(data.instagram_handle || "");
+          setFacebook(data.facebook_handle || "");
+          setTwitter(data.twitter_handle || "");
+          setPinterest(data.pinterest_handle || "");
+          setTiktok(data.tiktok_handle || "");
+          setWebsite(data.website_url || "");
 
-        setBrandExists(true); // Brand exists
+          setBrandExists(true); // Brand exists
+        }
+      } catch (err: any) {
+        toast.error(err?.message || "Failed to fetch brand details");
+        setBrandExists(false);
+      } finally {
+        setLoading(false);
       }
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to fetch brand details");
-      setBrandExists(false);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  fetchBrand();
-}, []);
+    fetchBrand();
+  }, []);
 
-
-
-  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>, type: "logoBlack" | "logoWhite" | "banner") => {
+  const handleFileChange = async (
+    e: ChangeEvent<HTMLInputElement>,
+    type: "logoBlack" | "logoWhite" | "banner"
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -115,119 +135,139 @@ const BrandProfilePage = () => {
   };
 
   const handleCreate = async () => {
-  if (!brandName || !brandDescription || !logoBlackUrl || !logoWhiteUrl || !bannerUrl) {
-    toast.error("Please fill in all required fields and upload images.");
-    return;
-  }
-
-  setLoading(true);
-  try {
-    const res = await setUpBrandProfile(
-      brandName,
-      brandDescription,
-      logoBlackUrl,
-      logoWhiteUrl,
-      bannerUrl,
-      instagram,
-      facebook,
-      twitter,
-      website,
-      tiktok,
-      pinterest
-    );
-
-    if (!res.success) {
-      toast.error(res.message || "Failed to create brand profile");
+    if (
+      !brandName ||
+      !brandDescription ||
+      !logoBlackUrl ||
+      !logoWhiteUrl ||
+      !bannerUrl
+    ) {
+      toast.error("Please fill in all required fields and upload images.");
       return;
     }
 
-    toast.success("Brand Profile has been submitted for review");
-    router.push("/");
-    setBrandExists(true); // After creation, show update button next time
-  } catch (err: any) {
-    toast.error(err?.message || "An error occurred");
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    try {
+      const res = await setUpBrandProfile(
+        brandName,
+        brandDescription,
+        logoBlackUrl,
+        logoWhiteUrl,
+        bannerUrl,
+        instagram,
+        facebook,
+        twitter,
+        website,
+        tiktok,
+        pinterest
+      );
 
-const handleUpdate = async () => {
-  if (!brandName || !brandDescription || !logoBlackUrl || !logoWhiteUrl || !bannerUrl) {
-    toast.error("Please fill in all required fields and upload images.");
-    return;
-  }
+      if (!res.success) {
+        toast.error(res.message || "Failed to create brand profile");
+        return;
+      }
 
-  setLoading(true);
-  try {
-    const res = await updateBrandDetails(
-      brandName,
-      brandDescription,
-      logoBlackUrl,
-      logoWhiteUrl,
-      bannerUrl,
-      instagram,
-      facebook,
-      twitter,
-      website,
-      tiktok,
-      pinterest
-    );
+      toast.success("Brand Profile has been submitted for review");
+      router.push("/");
+      setBrandExists(true); // After creation, show update button next time
+    } catch (err: any) {
+      toast.error(err?.message || "An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    if (!res.success) {
-      toast.error(res.message || "Failed to update brand profile");
+  const handleUpdate = async () => {
+    if (
+      !brandName ||
+      !brandDescription ||
+      !logoBlackUrl ||
+      !logoWhiteUrl ||
+      !bannerUrl
+    ) {
+      toast.error("Please fill in all required fields and upload images.");
       return;
     }
 
-    toast.success("Brand profile updated successfully!");
-  } catch (err: any) {
-    toast.error(err?.message || "An error occurred");
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    try {
+      const res = await updateBrandDetails(
+        brandName,
+        brandDescription,
+        logoBlackUrl,
+        logoWhiteUrl,
+        bannerUrl,
+        instagram,
+        facebook,
+        twitter,
+        website,
+        tiktok,
+        pinterest
+      );
 
+      if (!res.success) {
+        toast.error(res.message || "Failed to update brand profile");
+        return;
+      }
+
+      toast.success("Brand profile updated successfully!");
+    } catch (err: any) {
+      toast.error(err?.message || "An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <section className='bg-white min-h-screen px-4 md:px-8 py-6 w-full'>
-      <div className='w-full md:w-[600px] lg:w-[750px]'>
-        <h1 className='text-black font-semibold text-xl'>Brand Profile Setup</h1>
-        <p className='text-gray-500 text-[13px] mt-2 mb-5'>
-          Create your brand's presence on PALMODA. This information will be visible to customers.
+    <section className="bg-white min-h-screen px-4 md:px-8 py-6 w-full">
+      <div className="w-full md:w-[600px] lg:w-[750px]">
+        <h1 className="text-black font-semibold text-xl">
+          Brand Profile Setup
+        </h1>
+        <p className="text-gray-500 text-[13px] mt-2 mb-5">
+          Create your brand's presence on PALMODA. This information will be
+          visible to customers.
         </p>
 
-        <hr className='text-gray-200 mb-3.5' />
+        <hr className="text-gray-200 mb-3.5" />
 
         {/* Brand Name */}
-        <div className='flex flex-col gap-1.5 mb-4'>
-          <label className='text-black font-semibold text-xs'>Brand Name*</label>
+        <div className="flex flex-col gap-1.5 mb-4">
+          <label className="text-black font-semibold text-xs">
+            Brand Name*
+          </label>
           <input
             type="text"
             value={brandName}
             onChange={(e) => setBrandName(e.target.value)}
-            placeholder='Enter brand name'
+            placeholder="Enter brand name"
             disabled={isDisabled}
             className={`p-[5px] text-black border border-gray-200 text-xs ${isDisabled ? "cursor-not-allowed" : ""}`}
           />
         </div>
 
         {/* Brand Description */}
-        <div className='flex flex-col gap-1.5 mb-5'>
-          <label className='text-black font-semibold text-xs'>Brand Description/Bio*</label>
+        <div className="flex flex-col gap-1.5 mb-5">
+          <label className="text-black font-semibold text-xs">
+            Brand Description/Bio*
+          </label>
           <textarea
             value={brandDescription}
             onChange={(e) => setBrandDescription(e.target.value)}
-            placeholder='Tell us about your brand, philosophy, and what makes you unique'
+            placeholder="Tell us about your brand, philosophy, and what makes you unique"
             disabled={isDisabled}
             className={`w-full p-3 text-sm text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 resize-none h-32 
               ${isDisabled ? "cursor-not-allowed" : ""}`}
           />
-          <p className='text-xs text-gray-500'>Minimum 100 characters, maximum 500 characters</p>
+          <p className="text-xs text-gray-500">
+            Minimum 100 characters, maximum 500 characters
+          </p>
         </div>
 
-        <hr className='text-gray-200 my-5' />
+        <hr className="text-gray-200 my-5" />
 
         {/* Upload Boxes */}
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <BrandUploadBox
             title="Brand Logo (Black Version)*"
             fileUrl={logoBlackUrl}
@@ -259,28 +299,68 @@ const handleUpdate = async () => {
           />
         </div>
 
-        <hr className='text-gray-200 my-5' />
+        <hr className="text-gray-200 my-5" />
 
         {/* Social Media Inputs */}
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[
-            { label: 'Instagram', icon: <FaInstagram />, value: instagram, setter: setInstagram, placeholder: '@yourbrandname' },
-            { label: 'Facebook', icon: <FaFacebook />, value: facebook, setter: setFacebook, placeholder: 'facebook.com/yourbrandname' },
-            { label: 'Twitter', icon: <FaTwitter />, value: twitter, setter: setTwitter, placeholder: '@yourbrandname' },
-            { label: 'Pinterest', icon: <FaPinterest />, value: pinterest, setter: setPinterest, placeholder: 'pinterest.com/yourbrandname' },
-            { label: 'Tiktok', icon: <FaTiktok />, value: tiktok, setter: setTiktok, placeholder: '@yourbrandname' },
-            { label: 'Website', icon: <RiPlanetFill />, value: website, setter: setWebsite, placeholder: 'https://yourbrand.com' },
+            {
+              label: "Instagram",
+              icon: <FaInstagram />,
+              value: instagram,
+              setter: setInstagram,
+              placeholder: "@yourbrandname",
+            },
+            {
+              label: "Facebook",
+              icon: <FaFacebook />,
+              value: facebook,
+              setter: setFacebook,
+              placeholder: "facebook.com/yourbrandname",
+            },
+            {
+              label: "Twitter",
+              icon: <FaTwitter />,
+              value: twitter,
+              setter: setTwitter,
+              placeholder: "@yourbrandname",
+            },
+            {
+              label: "Pinterest",
+              icon: <FaPinterest />,
+              value: pinterest,
+              setter: setPinterest,
+              placeholder: "pinterest.com/yourbrandname",
+            },
+            {
+              label: "Tiktok",
+              icon: <FaTiktok />,
+              value: tiktok,
+              setter: setTiktok,
+              placeholder: "@yourbrandname",
+            },
+            {
+              label: "Website",
+              icon: <RiPlanetFill />,
+              value: website,
+              setter: setWebsite,
+              placeholder: "https://yourbrand.com",
+            },
           ].map((input, idx) => (
-            <div className='flex flex-col gap-1.5 w-full' key={idx}>
-              <label className='text-black font-semibold text-xs'>{input.label}</label>
+            <div className="flex flex-col gap-1.5 w-full" key={idx}>
+              <label className="text-black font-semibold text-xs">
+                {input.label}
+              </label>
               <div className="relative w-full">
-                <div className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400">{input.icon}</div>
+                <div className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400">
+                  {input.icon}
+                </div>
                 <input
                   type="text"
                   value={input.value}
                   onChange={(e) => input.setter(e.target.value)}
                   placeholder={input.placeholder}
-                   disabled={isDisabled}
+                  disabled={isDisabled}
                   className={`pl-8 text-gray-500 p-1 text-sm border border-gray-300 focus:ring-0 w-full
                      ${isDisabled ? "cursor-not-allowed" : ""}
                   `}
@@ -290,27 +370,32 @@ const handleUpdate = async () => {
           ))}
         </div>
 
-        <hr className='text-gray-200 my-5' />
+        <hr className="text-gray-200 my-5" />
 
         {/* Actions */}
-        <div className='flex justify-between items-center my-3'>
-          <button className='bg-inherit border border-black text-black p-[5px] w-[120px] text-sm'>Save as Draft</button>
-          <div className='flex gap-2'>
-  <button
-  onClick={() => router.back()}
-  className='bg-inherit border border-black text-black p-[5px] w-[120px] text-sm'>Back</button>
+        <div className="flex justify-between items-center my-3">
+          <button className="bg-inherit border border-black text-black p-[5px] w-[120px] text-sm">
+            Save as Draft
+          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => router.back()}
+              className="bg-inherit border border-black text-black p-[5px] w-[120px] text-sm"
+            >
+              Back
+            </button>
 
-  {!brandExists && (
-    <button
-      onClick={handleCreate}
-      className='bg-black text-white p-[5px] w-[120px] text-sm flex justify-center items-center'
-      disabled={loading}
-    >
-      {loading ? "Loading..." : "Create"}
-    </button>
-  )}
+            {!brandExists && (
+              <button
+                onClick={handleCreate}
+                className="bg-black text-white p-[5px] w-[120px] text-sm flex justify-center items-center"
+                disabled={loading}
+              >
+                {loading ? "Loading..." : "Create"}
+              </button>
+            )}
 
-  {/* {brandExists && (
+            {/* {brandExists && (
     <button
       onClick={handleUpdate}
       className='bg-black text-white p-[5px] w-[120px] text-sm flex justify-center items-center'
@@ -319,19 +404,20 @@ const handleUpdate = async () => {
       {loading ? "Loading..." : "Update"}
     </button>
   )} */}
-</div>
-
+          </div>
         </div>
 
-        <hr className='text-gray-200 my-5' />
+        <hr className="text-gray-200 my-5" />
 
         {/* Info */}
-        <div className='flex justify-between items-start my-3'>
-          <div className='flex items-start gap-1 text-xs text-gray-500'>
+        <div className="flex justify-between items-start my-3">
+          <div className="flex items-start gap-1 text-xs text-gray-500">
             <BiSolidInfoCircle />
             <p>Need help setting up your brand profile? View our guide</p>
           </div>
-          <Link href="/" className='text-black font-semibold text-sm'>Skip for now</Link>
+          <Link href="/" className="text-black font-semibold text-sm">
+            Skip for now
+          </Link>
         </div>
       </div>
     </section>

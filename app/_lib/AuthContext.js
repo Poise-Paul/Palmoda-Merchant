@@ -83,7 +83,15 @@ export const AuthProvider = ({ children }) => {
     setToken(authData.data.token);
     setIsAuthenticated(true);
 
-    router.push("/");
+    if (
+      authData.data.is_identity_verified &&
+      authData.data.is_bank_information_verified &&
+      authData.data.is_business_verified
+    ) {
+      router.push("/");
+    } else {
+      router.push("/kyc-compliance");
+    }
   };
 
   const logout = () => {
