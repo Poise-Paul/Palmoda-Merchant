@@ -147,7 +147,7 @@ useEffect(() => {
             <span>Notifications</span>
 
               <span className="bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                {count}
+                {count || 0}
               </span>
           </div>
         </Link>

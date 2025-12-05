@@ -13,6 +13,7 @@ import { BiSolidInfoCircle } from "react-icons/bi";
 import BrandUploadBox from "./BrandUploadBox";
 import { toast } from "react-toastify";
 import axios from "axios";
+import Swal from "sweetalert2";
 import {
   setUpBrandProfile,
   getBrandDetails,
@@ -69,8 +70,9 @@ const BrandProfilePage = () => {
   const [website, setWebsite] = useState("");
   const [hasDraft, setHasDraft] = useState(false);
   
+  
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const isDisabled =
     user?.is_bank_information_verified ||
     user?.is_business_verified ||
@@ -244,6 +246,27 @@ const BrandProfilePage = () => {
       localStorage.removeItem('brand_draft');
       setHasDraft(false);
       setBrandExists(true);
+
+        await Swal.fire({
+      title: "Brand Created!",
+      html: `
+        Your brand profile has been submitted for review.<br/>
+        Please wait for the admin verification email.<br/><br/>
+        For now, you should logout and login again later.
+      `,
+      icon: "success",
+      showCancelButton: true,
+      confirmButtonText: "Logout Now",
+      cancelButtonText: "Later",
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+    }).then((result: any) => {
+      if (result.isConfirmed) {
+        logout(); // Call the logout function from AuthContext
+      }
+    });
+
+
     } catch (err: any) {
       toast.error(err?.message || "An error occurred");
     } finally {
