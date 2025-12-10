@@ -222,7 +222,7 @@ export const getOrders = async () => {
         data: null, // always include data field
       };
     }
-    const res = await axios.get(`${backendUrl}/order/all`, {
+    const res = await axios.get(`${backendUrl}/vendor/orders`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -243,6 +243,38 @@ export const getOrders = async () => {
     };
   }
 };
+
+export const getOrderDetails = async (id) => {
+    try {
+       const token = localStorage.getItem("token");
+    if (!token) {
+      return {
+        success: false,
+        message: "No token found",
+        data: null, // always include data field
+      };
+    }
+    const res = await axios.get(`${backendUrl}/vendor/orders/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return res.data;
+    } catch (error) {
+        if (error.response?.data?.message) {
+      return {
+        success: false,
+        message: error.response.data.message,
+      };
+    }
+
+    // fallback message
+    return {
+      success: false,
+      message: error.message || "Something went wrong",
+    };
+    }
+}
 
 export const activateWallet = async (bvn) => {
   try {
@@ -376,7 +408,7 @@ export const resolveAccount = async (account_number, bank_code) => {
 
 export const updatePassword = async (email, password) => {
     try {
-       const res = await axios.post(`${backendUrl}/user/update-password/${email}`, {password}, {
+       const res = await axios.post(`${backendUrl}/user/update_password/${email}`, {password}, {
        params: {
           user_type: "vendor",
         },

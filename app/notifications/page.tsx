@@ -78,13 +78,13 @@ function Page() {
                         Click to see details
                       </p>
                     </div>
-                    <span className="text-xs text-gray-500">
+                    <span className={`text-xs ${notif.status === "unread" ? "text-white" : "text-gray-500"} `}>
                       {new Date(notif.created_at).toLocaleDateString()}
                     </span>
                   </div>
 
                   {expandedId === notif._id && (
-                    <div className="mt-2 text-xs text-gray-600 space-y-1">
+                    <div className={`mt-2 text-xs ${notif.status === "unread" ? "text-white" : "text-gray-600"} space-y-1`}>
                       <p>{notif.content}</p>
 
                       {notif.details && (
@@ -101,7 +101,7 @@ function Page() {
                       {notif.status === "unread" && (
                         <button
                           onClick={() => handleMarkAsRead(notif._id)}
-                          className="mt-2 px-3 py-1 cursor-pointer text-xs text-white bg-black rounded"
+                          className="mt-2 px-3 py-1 cursor-pointer text-xs text-white bg-gray-900 rounded"
                         >
                           Mark as Read
                         </button>
