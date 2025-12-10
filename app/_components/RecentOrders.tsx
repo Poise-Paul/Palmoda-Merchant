@@ -1,64 +1,49 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { getOrders } from "../_lib/vendor";
-
-interface OrderType {
-  id: string;
-  created_at: string;
-  total_amount: number;
-  items: number;
-  status: string;
-}
+import React from "react";
+import { useOrdersList } from "../_lib/useOrders";
+import Link from "next/link";
 
 function RecentOrders() {
-  const [orders, setOrders] = useState<OrderType[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const { data, isLoading, isError } = useOrdersList(1);
+
+  const orders = data?.data?.orders || [];
+  const recentOrders = orders.slice(0, 3);
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Shipped":
+    const normalizedStatus = status.toLowerCase();
+    switch (normalizedStatus) {
       case "shipped":
         return "text-green-600 bg-green-100";
-      case "Processing":
       case "processing":
         return "text-blue-600 bg-blue-100";
-      case "Delivered":
       case "delivered":
         return "text-gray-700 bg-gray-100";
+      case "created":
+        return "text-yellow-600 bg-yellow-100";
       default:
         return "text-gray-600 bg-gray-100";
     }
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await getOrders();
-        const rawOrders = res?.data?.orders || [];
+  const formatDate = (dateObj: { $date: string } | string) => {
+    try {
+      const dateString = typeof dateObj === "string" ? dateObj : dateObj.$date;
+      return new Date(dateString).toDateString();
+    } catch {
+      return "N/A";
+    }
+  };
 
-        // Map response to UI format
-        const mapped = rawOrders.map((o: any) => ({
-          id: o.order_number || o._id || "#00000",
-          created_at: o.created_at || "",
-          total_amount: o.total_amount || 0,
-          items: o.items?.length || 0,
-          status: o.status || "Pending",
-        }));
+  const calculateTotalAmount = (vendorOrders: any[]) => {
+    return vendorOrders.reduce((sum, order) => sum + (order.amount || 0), 0);
+  };
 
-        // show only first 3
-        setOrders(mapped.slice(0, 3));
-      } catch (err) {
-        console.log("Order fetch error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const calculateTotalItems = (vendorOrders: any[]) => {
+    return vendorOrders.reduce((sum, order) => sum + (order.quantity || 0), 0);
+  };
 
-    fetchData();
-  }, []);
-
-  // ⭐ Skeleton Loader (glass-like shimmer)
-  if (loading) {
+  // Skeleton Loader
+  if (isLoading) {
     return (
       <div className="w-full md:w-[300px] bg-white border border-gray-200 rounded-md p-4">
         <h2 className="text-black font-semibold text-base mb-3">Recent Orders</h2>
@@ -81,50 +66,69 @@ function RecentOrders() {
     );
   }
 
+  // Error State
+  if (isError) {
+    return (
+      <div className="w-full md:w-[300px] bg-white border border-gray-200 rounded-md p-4">
+        <h2 className="text-black font-semibold text-base mb-3">Recent Orders</h2>
+        <p className="text-red-500 text-sm text-center py-6">
+          Failed to load orders.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full md:w-[300px] bg-white border border-gray-200 rounded-md p-4">
       <h2 className="text-black font-semibold text-base mb-3">Recent Orders</h2>
 
       {/* No Orders Fallback */}
-      {orders.length === 0 && (
+      {recentOrders.length === 0 && (
         <p className="text-gray-500 text-sm text-center py-6">
           No recent orders.
         </p>
       )}
 
       <div className="flex flex-col gap-3">
-        {orders.map((order) => (
-          <div
-            key={order.id}
-            className="flex items-center justify-between border-b border-gray-100 pb-2 last:border-b-0"
-          >
-            <div>
-              <p className="text-sm font-semibold text-black">
-                Order #{order.id}
-              </p>
-              <p className="text-xs text-gray-500">
-                {new Date(order.created_at).toDateString()}
-              </p>
-              <p className="text-xs text-gray-600">
-                ₦{order.total_amount?.toLocaleString()} • {order.items} item
-                {order.items > 1 ? "s" : ""}
-              </p>
-            </div>
+        {recentOrders.map((order) => {
+          const totalAmount = calculateTotalAmount(order.vendor_orders);
+          const totalItems = calculateTotalItems(order.vendor_orders);
 
-            <span
-              className={`text-[11px] font-medium px-2 py-1 rounded-full ${getStatusColor(
-                order.status
-              )}`}
+          return (
+            <div
+              key={order._id}
+              className="flex items-center justify-between border-b border-gray-100 pb-2 last:border-b-0"
             >
-              {order.status}
-            </span>
-          </div>
-        ))}
+              <div>
+                <p className="text-sm font-semibold text-black">
+                  {order.order_info.transaction_reference}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {formatDate(order.order_info.transaction_date)}
+                </p>
+                <p className="text-xs text-gray-600">
+                  ₦{totalAmount.toLocaleString()} • {totalItems} item
+                  {totalItems > 1 ? "s" : ""}
+                </p>
+              </div>
+
+              <span
+                className={`text-[11px] font-medium px-2 py-1 rounded-full capitalize ${getStatusColor(
+                  order.order_info.status
+                )}`}
+              >
+                {order.order_info.status}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
-      <button className="w-full mt-4 text-center bg-black text-white py-2 rounded-md text-sm font-medium hover:bg-gray-800 transition-colors">
-        View All Orders
-      </button>
+      <Link href="/orders">
+        <button className="w-full mt-4 text-center bg-black text-white py-2 rounded-md text-sm font-medium hover:bg-gray-800 transition-colors">
+          View All Orders
+        </button>
+      </Link>
     </div>
   );
 }
