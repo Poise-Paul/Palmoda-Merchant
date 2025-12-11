@@ -83,6 +83,24 @@ function page() {
 
   console.log(user);
 
+  // Add this function after your state declarations
+const resetForm = () => {
+  setProductName("");
+  setSku("");
+  setDescription("");
+  setCareInstructions("");
+  setMaterials("");
+  setPrice("");
+  setComparePrice("");
+  setInventory(0);
+  setImages([]);
+  setColors([]);
+  setSizes([]);
+  setSelectedCategory("");
+  setSelectedSubCategory("");
+  setGender("");
+};
+
   // Check if draft exists on mount
   useEffect(() => {
     const draft = localStorage.getItem('product_draft');
@@ -341,6 +359,7 @@ function page() {
       // Clear draft after successful submission
       localStorage.removeItem('product_draft');
       setHasDraft(false);
+      resetForm();
       // Reset form or redirect
     } else {
       toast.error(res.message);
