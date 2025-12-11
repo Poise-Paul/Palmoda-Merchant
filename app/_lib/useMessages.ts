@@ -30,7 +30,10 @@ export const useMessageList = () => {
   return useQuery<MessageListResponse>({
     queryKey: ["messages"] as QueryKey,
     queryFn: getMessages,
-    staleTime: 5 * 60 * 1000, // cache is fresh for 5 minutes
+    staleTime: 1 * 60 * 1000,
+     // cache is fresh for 5 minutes
+      refetchOnWindowFocus: false,
+     refetchInterval: 1000,
   });
 };
 

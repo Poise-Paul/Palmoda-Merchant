@@ -409,7 +409,7 @@ const resetForm = () => {
             </div>
             <div className="flex flex-col gap-1.5 w-full">
               <label htmlFor="SKU" className="text-black font-semibold text-xs">
-                SKU *
+                SKU
               </label>
               <input
                 type="text"
