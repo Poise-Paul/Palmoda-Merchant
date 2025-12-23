@@ -11,6 +11,7 @@ import { getBrandDetails } from "./_lib/brand";
 import type { Notification as MyNotification } from "./_lib/type";
 import { getNotifications } from "./_lib/notifications";
 import { toast } from "react-toastify";
+import { useFetchAnalytics } from "./_lib/dashboard";
 
 // Add this at the top of your file
 interface ProductType {
@@ -57,6 +58,7 @@ function page() {
 
     fetchBrand();
   }, []);
+
 
   useEffect(() => {
     const fetchNotifications = async () => {

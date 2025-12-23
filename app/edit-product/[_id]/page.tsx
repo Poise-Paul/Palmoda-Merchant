@@ -31,7 +31,7 @@ interface ProductType {
   categories: string[];
   sub_categories: string[];
   sizes: string[];
-  gender: string[];
+  genders: string[];
 }
 
 const cloudName = "jokoyoski";
@@ -113,9 +113,12 @@ function EditProductPage() {
   });
 
   // Fetch all data
-  const { data: categoriesArray = [], isLoading: categoriesLoading } = useCategories(queryParams);
-  const { data: subCategoriesArray = [], isLoading: subCategoryLoader } = useSubCategories();
-  const { data: gendersArray = [], isLoading: genderLoading } = useFetchGenders();
+  const { data: categoriesArray = [], isLoading: categoriesLoading } =
+    useCategories(queryParams);
+  const { data: subCategoriesArray = [], isLoading: subCategoryLoader } =
+    useSubCategories();
+  const { data: gendersArray = [], isLoading: genderLoading } =
+    useFetchGenders();
   const { data: sizesArray = [], isLoading: sizesLoading } = useFetchSizes();
   const { data: colorsArray = [], isLoading: colorsLoader } = useFetchColors();
 
@@ -126,7 +129,7 @@ function EditProductPage() {
         const res = await fetchProducts(1, 100);
         setProducts(res?.data?.data || []);
       } catch (error) {
-        console.error("Error fetching products:", error);
+        // console.error("Error fetching products:", error);
         toast.error("Failed to load product data");
       }
     };
@@ -136,9 +139,15 @@ function EditProductPage() {
   // ✅ Populate form when product and all reference data are loaded
   useEffect(() => {
     if (!products.length || !_id) return;
-    
+
     // Wait for all reference data to load before populating
-    if (categoriesLoading || subCategoryLoader || genderLoading || sizesLoading || colorsLoader) {
+    if (
+      categoriesLoading ||
+      subCategoryLoader ||
+      genderLoading ||
+      sizesLoading ||
+      colorsLoader
+    ) {
       return;
     }
 
@@ -163,18 +172,23 @@ function EditProductPage() {
     // ✅ Set selections - these are already IDs, just verify they exist
     const categoryId = foundProduct.categories?.[0] || "";
     const subCategoryId = foundProduct.sub_categories?.[0] || "";
-    const genderId = foundProduct.gender?.[0] || "";
+    const genderId = foundProduct.genders?.[0] || "";
 
     // Verify the IDs exist in the loaded data
-    if (categoryId && categoriesArray?.some(cat => cat._id === categoryId)) {
+    if (categoryId && categoriesArray?.some((cat) => cat._id === categoryId)) {
       setSelectedCategory(categoryId);
     }
-    
-    if (subCategoryId && subCategoriesArray?.some(sub => sub._id === subCategoryId)) {
+
+    if (
+      subCategoryId &&
+      subCategoriesArray?.some((sub) => sub._id === subCategoryId)
+    ) {
       setSelectedSubCategory(subCategoryId);
     }
-    
-    if (genderId && gendersArray?.some(gen => gen._id === genderId)) {
+
+    console.log("Gender Array", gendersArray, "ID==", genderId);
+
+    if (genderId && gendersArray?.some((gen) => gen._id === genderId)) {
       setSelectedGender(genderId);
     }
 
@@ -182,7 +196,18 @@ function EditProductPage() {
     setSizes(foundProduct.sizes || []);
 
     setProductLoading(false);
-  }, [products, _id, categoriesArray, subCategoriesArray, gendersArray, categoriesLoading, subCategoryLoader, genderLoading, sizesLoading, colorsLoader]);
+  }, [
+    products,
+    _id,
+    categoriesArray,
+    subCategoriesArray,
+    gendersArray,
+    categoriesLoading,
+    subCategoryLoader,
+    genderLoading,
+    sizesLoading,
+    colorsLoader,
+  ]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -334,7 +359,10 @@ function EditProductPage() {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5 w-full">
-                  <label htmlFor="Product Name" className="text-black font-semibold text-xs">
+                  <label
+                    htmlFor="Product Name"
+                    className="text-black font-semibold text-xs"
+                  >
                     Product Name *
                   </label>
                   <input
@@ -347,7 +375,10 @@ function EditProductPage() {
                   />
                 </div>
                 <div className="flex flex-col gap-1.5 w-full">
-                  <label htmlFor="SKU" className="text-black font-semibold text-xs">
+                  <label
+                    htmlFor="SKU"
+                    className="text-black font-semibold text-xs"
+                  >
                     SKU *
                   </label>
                   <input
@@ -363,7 +394,10 @@ function EditProductPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-4">
                 <div className="flex flex-col gap-1.5 mb-4">
-                  <label htmlFor="category" className="text-black font-semibold text-xs">
+                  <label
+                    htmlFor="category"
+                    className="text-black font-semibold text-xs"
+                  >
                     Category *
                   </label>
                   <select
@@ -377,7 +411,9 @@ function EditProductPage() {
                     className="border disabled:cursor-not-allowed disabled:bg-gray-100 border-gray-300 text-sm text-gray-600 p-2 focus:outline-none focus:ring-2 focus:ring-black"
                   >
                     <option value="">
-                      {categoriesLoading ? "Loading..." : "-- Select Category --"}
+                      {categoriesLoading
+                        ? "Loading..."
+                        : "-- Select Category --"}
                     </option>
                     {categoriesArray?.map((cat) => (
                       <option key={cat._id} value={cat._id}>
@@ -393,7 +429,10 @@ function EditProductPage() {
                 </div>
 
                 <div className="flex flex-col gap-1.5 mb-4">
-                  <label htmlFor="subcategory" className="text-black font-semibold text-xs">
+                  <label
+                    htmlFor="subcategory"
+                    className="text-black font-semibold text-xs"
+                  >
                     Subcategory *
                   </label>
                   <select
@@ -404,7 +443,9 @@ function EditProductPage() {
                     className="border border-gray-300 text-sm text-gray-600 p-2 focus:outline-none focus:ring-2 focus:ring-black disabled:cursor-not-allowed disabled:bg-gray-100"
                   >
                     <option value="">
-                      {subCategoryLoader ? "Loading..." : "-- Select Subcategory --"}
+                      {subCategoryLoader
+                        ? "Loading..."
+                        : "-- Select Subcategory --"}
                     </option>
                     {subCategoriesArray?.map((sub) => (
                       <option key={sub._id} value={sub._id}>
@@ -420,13 +461,16 @@ function EditProductPage() {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="gender" className="text-black font-semibold text-xs">
+                  <label
+                    htmlFor="gender"
+                    className="text-black font-semibold text-xs"
+                  >
                     Gender *
                   </label>
                   <select
                     id="gender"
                     value={selectedGender}
-                   disabled={true}
+                    disabled={true}
                     onChange={(e) => setSelectedGender(e.target.value)}
                     className="border border-gray-300 text-sm text-gray-600
                      p-2 focus:outline-none focus:ring-2 focus:ring-black disabled:cursor-not-allowed"
@@ -442,14 +486,21 @@ function EditProductPage() {
                   </select>
                   {selectedGender && (
                     <p className="text-xs text-green-600 mt-1">
-                      ✓ Selected: {gendersArray?.find(g => g._id === selectedGender)?.name}
+                      ✓ Selected:{" "}
+                      {
+                        gendersArray?.find((g) => g._id === selectedGender)
+                          ?.name
+                      }
                     </p>
                   )}
                 </div>
               </div>
 
               <div className="flex w-full my-2 flex-col gap-1.5">
-                <label htmlFor="product-description" className="text-black font-semibold text-xs">
+                <label
+                  htmlFor="product-description"
+                  className="text-black font-semibold text-xs"
+                >
                   Product Description/Bio*
                 </label>
                 <textarea
@@ -464,20 +515,30 @@ function EditProductPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 mt-5 gap-4">
                 <div className="flex flex-col gap-1.5 w-full">
-                  <label htmlFor="materials" className="text-black font-semibold text-xs">
+                  <label
+                    htmlFor="materials"
+                    className="text-black font-semibold text-xs"
+                  >
                     Materials/Fabric *
                   </label>
                   <input
                     type="text"
                     value={materials.join(", ")}
-                    onChange={(e) => setMaterials(e.target.value.split(",").map((m) => m.trim()))}
+                    onChange={(e) =>
+                      setMaterials(
+                        e.target.value.split(",").map((m) => m.trim())
+                      )
+                    }
                     placeholder="Cotton, Polyester, Silk etc."
                     className="text-gray-500 p-2 text-sm border border-gray-300 focus:ring-2 focus:ring-black disabled:cursor-not-allowed disabled:bg-gray-100"
                     disabled={true}
                   />
                 </div>
                 <div className="flex flex-col gap-1.5 w-full">
-                  <label htmlFor="care" className="text-black font-semibold text-xs">
+                  <label
+                    htmlFor="care"
+                    className="text-black font-semibold text-xs"
+                  >
                     Care Instructions
                   </label>
                   <input
@@ -492,10 +553,15 @@ function EditProductPage() {
               </div>
 
               <div className="mt-4">
-                <h1 className="text-black text-sm font-semibold">Pricing & Inventory</h1>
+                <h1 className="text-black text-sm font-semibold">
+                  Pricing & Inventory
+                </h1>
                 <div className="grid grid-cols-1 md:grid-cols-3 mt-3 gap-4">
                   <div className="flex flex-col gap-1.5 w-full">
-                    <label htmlFor="price" className="text-black font-semibold text-xs">
+                    <label
+                      htmlFor="price"
+                      className="text-black font-semibold text-xs"
+                    >
                       Price (NGN)*
                     </label>
                     <input
@@ -506,7 +572,10 @@ function EditProductPage() {
                     />
                   </div>
                   <div className="flex flex-col gap-1.5 w-full">
-                    <label htmlFor="compare-price" className="text-black font-semibold text-xs">
+                    <label
+                      htmlFor="compare-price"
+                      className="text-black font-semibold text-xs"
+                    >
                       Discount Price (NGN)
                     </label>
                     <input
@@ -517,7 +586,10 @@ function EditProductPage() {
                     />
                   </div>
                   <div className="flex flex-col gap-1.5 w-full">
-                    <label htmlFor="inventory" className="text-black font-semibold text-xs">
+                    <label
+                      htmlFor="inventory"
+                      className="text-black font-semibold text-xs"
+                    >
                       Inventory Quantity*
                     </label>
                     <input
@@ -532,7 +604,9 @@ function EditProductPage() {
               <hr className="text-gray-200 mt-2 mb-4" />
 
               <div>
-                <h2 className="text-black text-sm font-semibold mb-2">Colors & Sizes</h2>
+                <h2 className="text-black text-sm font-semibold mb-2">
+                  Colors & Sizes
+                </h2>
                 <div className="mb-4">
                   <p className="text-xs text-gray-600 mb-1">Available Colors</p>
                   <div className="flex gap-2 flex-wrap">
@@ -540,9 +614,13 @@ function EditProductPage() {
                     {colorsArray?.map((color) => (
                       <button
                         key={color._id}
-                        onClick={() => toggleSelection(color._id, colors, setColors)}
+                        onClick={() =>
+                          toggleSelection(color._id, colors, setColors)
+                        }
                         className={`border rounded-full w-7 h-7 ${
-                          colors.includes(color._id) ? "ring-2 ring-black" : "border-gray-400"
+                          colors.includes(color._id)
+                            ? "ring-2 ring-black"
+                            : "border-gray-400"
                         }`}
                         style={{ backgroundColor: color.code }}
                         title={color.name}
@@ -557,7 +635,9 @@ function EditProductPage() {
                     {sizesArray?.map((size) => (
                       <button
                         key={size._id}
-                        onClick={() => toggleSelection(size._id, sizes, setSizes)}
+                        onClick={() =>
+                          toggleSelection(size._id, sizes, setSizes)
+                        }
                         className={`border text-xs px-2 py-1 rounded ${
                           sizes.includes(size._id)
                             ? "bg-black text-white"
@@ -574,24 +654,33 @@ function EditProductPage() {
               <hr className="text-gray-200 mt-4 mb-4" />
 
               <div>
-                <h2 className="text-black text-sm font-semibold mb-2">Product Images</h2>
+                <h2 className="text-black text-sm font-semibold mb-2">
+                  Product Images
+                </h2>
                 <p className="text-xs text-gray-600 mb-2">
-                  Upload high-quality images from multiple angles. First image will be used as the
-                  main product image.
+                  Upload high-quality images from multiple angles. First image
+                  will be used as the main product image.
                 </p>
 
-                {imageUploading && <p className="text-sm text-blue-600">Uploading Images...</p>}
+                {imageUploading && (
+                  <p className="text-sm text-blue-600">Uploading Images...</p>
+                )}
 
                 <div className="flex flex-wrap gap-3">
                   {images.map((img, i) => (
-                    <div key={i} className="relative w-28 h-28 border rounded-md">
+                    <div
+                      key={i}
+                      className="relative w-28 h-28 border rounded-md"
+                    >
                       <img
                         src={img}
                         alt={`upload-${i}`}
                         className="object-cover w-full h-full rounded-md"
                       />
                       <button
-                        onClick={() => setImages(images.filter((_, idx) => idx !== i))}
+                        onClick={() =>
+                          setImages(images.filter((_, idx) => idx !== i))
+                        }
                         className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center hover:bg-red-600"
                       >
                         ×
@@ -602,7 +691,9 @@ function EditProductPage() {
                   <label className="w-28 h-28 border-2 border-dashed border-gray-400 flex items-center px-3 justify-center text-gray-500 text-xs cursor-pointer rounded-md hover:bg-gray-100">
                     <div className="flex flex-col justify-center items-center">
                       <FaFileUpload className="text-gray-300 mb-2" />
-                      <p className="text-gray-500 mb-2 text-xs">click to upload</p>
+                      <p className="text-gray-500 mb-2 text-xs">
+                        click to upload
+                      </p>
                       <p className="text-gray-500 mb-2 text-[10px] text-center">
                         JPG, PNG (Max 5MB)
                       </p>

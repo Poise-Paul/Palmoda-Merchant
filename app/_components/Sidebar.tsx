@@ -191,13 +191,7 @@ function Sidebar() {
               ? "Upload new products"
               : "Complete KYC to upload products"
           }
-          className={`flex hover:bg-gray-50 ${
-            user?.is_bank_information_verified &&
-            user?.is_business_verified &&
-            user?.is_identity_verified
-              ? ""
-              : "pointer-events-none cursor-not-allowed opacity-30"
-          } font-semibold items-center ${pathname === "/messages" ? "bg-gray-300" : ""} p-3 hover:bg-gray-100 transition-all duration-300 ease-in-out gap-3 text-black`}
+          className={`flex hover:bg-gray-50 font-semibold items-center ${pathname === "/messages" ? "bg-gray-300" : ""} p-3 hover:bg-gray-100 transition-all duration-300 ease-in-out gap-3 text-black`}
         >
           <div className="relative flex items-center gap-2">
             <FaMessage />

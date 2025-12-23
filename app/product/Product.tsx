@@ -1,78 +1,79 @@
-import React, { useState } from 'react'
-import { Product } from '../_lib/type';
-import { useFetchColors } from '../_lib/colors';
-import { useFetchSizes } from '../_lib/sizes';
-import { useFetchGenders } from '../_lib/gender';
-import { useCategories } from '../_lib/categories';
-import { CategoryQueryParams } from '@/types';
-import { CiUser } from 'react-icons/ci';
-
+import React, { useState } from "react";
+import { Product } from "../_lib/type";
+import { useFetchColors } from "../_lib/colors";
+import { useFetchSizes } from "../_lib/sizes";
+import { useFetchGenders } from "../_lib/gender";
+import { useCategories } from "../_lib/categories";
+import { CategoryQueryParams } from "@/types";
+import { CiUser } from "react-icons/ci";
 
 interface ProductProps {
   product: Product;
 }
 
+function ProductComponent({ product }: ProductProps) {
+  const [colors, setColors] = useState<string[]>([]);
+  const [sizes, setSizes] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
+  const [gender, setGender] = useState<string[]>([]);
+  const [currentMainImage, setCurrentMainImage] = useState(product.images[0]);
 
-function ProductComponent({ product,  }: ProductProps) {
-    const [colors, setColors] = useState<string[]>([]);
-    const [sizes, setSizes] = useState<string[]>([]);
-    const [selectedCategory, setSelectedCategory] = useState<string>("");
-    const [selectedSubCategory, setSelectedSubCategory] = useState<string>("");
-    const [gender, setGender] = useState<string[]>([]);
-    const [currentMainImage, setCurrentMainImage] = useState(product.images[0]);
+  const [queryParams, setQueryParams] = useState<CategoryQueryParams>({
+    page_number: 1,
+    page_size: 10,
+    filter: {
+      search_term: null,
+      countries: {
+        $in: [],
+      },
+    },
+    sort_field: "name",
+    sort_direction: 1,
+  });
 
-     const [queryParams, setQueryParams] = useState<CategoryQueryParams>({
-        page_number: 1,
-        page_size: 10,
-        filter: {
-          search_term: null,
-          countries: {
-            $in: [],
-          },
-        },
-        sort_field: "name",
-        sort_direction: 1,
-      });
-    
-      const {
-        data: categoriesArray = [],
-        isLoading,
-        isError,
-        error,
-      } = useCategories(queryParams);
-    
-    
-      const {
-        data: gendersArray = [],
-        isLoading: genderLoading,
-        isError: isGenderError,
-        error: genderError,
-      } = useFetchGenders();
-    
-      const {
-        data: sizesArray = [],
-        isLoading: sizesLoading,
-        isError: sizesIsError,
-        error: sizesError,
-      } = useFetchSizes();
-    
-      const {
-        data: colorsArray = [],
-        isLoading: colorsLoader,
-        isError: colorIsError,
-        error: colorError,
-      } = useFetchColors();
+  const {
+    data: categoriesArray = [],
+    isLoading,
+    isError,
+    error,
+  } = useCategories(queryParams);
 
-      const mapIdsToNames = (ids: string[], referenceArray: { _id: string; name: string }[]) => {
-  return ids
-    .map(id => referenceArray.find(ref => ref._id === id)?.name)
-    .filter(Boolean)
-    .join(", ") || "N/A";
-};
+  const {
+    data: gendersArray = [],
+    isLoading: genderLoading,
+    isError: isGenderError,
+    error: genderError,
+  } = useFetchGenders();
 
-// For fabrics/materials
-const formatFabrics = (fabrics: string[]) => fabrics?.join(", ") || "N/A";
+  const {
+    data: sizesArray = [],
+    isLoading: sizesLoading,
+    isError: sizesIsError,
+    error: sizesError,
+  } = useFetchSizes();
 
+  const {
+    data: colorsArray = [],
+    isLoading: colorsLoader,
+    isError: colorIsError,
+    error: colorError,
+  } = useFetchColors();
+
+  const mapIdsToNames = (
+    ids: string[],
+    referenceArray: { _id: string; name: string }[]
+  ) => {
+    return (
+      ids
+        .map((id) => referenceArray.find((ref) => ref._id === id)?.name)
+        .filter(Boolean)
+        .join(", ") || "N/A"
+    );
+  };
+
+  // For fabrics/materials
+  const formatFabrics = (fabrics: string[]) => fabrics?.join(", ") || "N/A";
 
   return (
     <section className="bg-white px-4 mt-3.5 py-3">
@@ -120,10 +121,10 @@ const formatFabrics = (fabrics: string[]) => fabrics?.join(", ") || "N/A";
             <h1 className="text-sm font-semibold text-black">{product.name}</h1>
             <div className="flex items-center gap-4 my-3.5">
               <h3 className="text-xl font-semibold text-black">
-                ₦{product.discounted_price}
+                ₦{product.discounted_price.toLocaleString()}
               </h3>
               <h4 className="text-gray-500 text-sm line-through">
-                ₦{product.cost_price}
+                ₦{product.cost_price.toLocaleString()}
               </h4>
             </div>
             <div className="flex gap-12">
@@ -217,4 +218,4 @@ const formatFabrics = (fabrics: string[]) => fabrics?.join(", ") || "N/A";
   );
 }
 
-export default ProductComponent
+export default ProductComponent;

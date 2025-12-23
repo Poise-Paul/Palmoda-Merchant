@@ -448,7 +448,7 @@ function Page() {
                   htmlFor="Tax ID"
                   className="text-black font-semibold text-xs"
                 >
-                  Tax ID (optional) 
+                  Tax ID (optional)
                 </label>
                 <input
                   type="number"
@@ -713,7 +713,7 @@ function Page() {
 
               <button
                 className={`p-[5px] w-[120px] text-sm text-white ${
-                  !certified ? "bg-black" : "bg-gray-400 cursor-not-allowed"
+                  certified ? "bg-black" : "bg-gray-400 cursor-not-allowed"
                 }  ${isDisabled ? "cursor-not-allowed" : ""} disabled:cursor-not-allowed`}
                 onClick={handleContinue}
                 type="button"

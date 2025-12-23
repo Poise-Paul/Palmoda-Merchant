@@ -73,7 +73,7 @@ export interface Product {
   quantity: number;
   categories: string[];
   sub_categories: string[];
-  genders: string[] | any[];
+  genders: string[];
   colors: string[];
   sizes: string[];
   fabrics: string[];

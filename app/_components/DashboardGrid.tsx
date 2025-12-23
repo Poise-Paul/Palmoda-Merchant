@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { MdInventory2, MdPendingActions } from "react-icons/md";
 import { FaCartArrowDown, FaMoneyBillWave } from "react-icons/fa";
 import { fetchAnalytics } from "../_lib/vendor";
+import { useFetchAnalytics } from "../_lib/dashboard";
 
 interface ProductType {
   _id: string;
@@ -35,6 +36,13 @@ function DashboardGrid({ products }: ProductsProps) {
     };
     getData();
   }, []);
+
+  const {
+    data,
+    isLoading: genderLoading,
+    isError: isGenderError,
+    error: genderError,
+  } = useFetchAnalytics();
 
   // Loading skeleton
   if (loading) {
@@ -73,18 +81,18 @@ function DashboardGrid({ products }: ProductsProps) {
     },
     {
       text: "Total Orders",
-      keyword: analytics.orders,
+      keyword: data?.total_orders,
       icon: <FaCartArrowDown color="black" size={22} />,
     },
     {
       text: "Total Revenue",
-      keyword: "₦1",
+      keyword: `₦${data?.total_revenue.toLocaleString()}`,
       percentage: "18%",
       icon: <FaMoneyBillWave color="black" size={22} />,
     },
     {
-      text: "Pending Products",
-      keyword: analytics?.totalPending || 0,
+      text: "Total Quantity Sold",
+      keyword: data?.total_quantity_sold,
       percentage: "5%",
       icon: <MdPendingActions color="black" size={22} />,
     },

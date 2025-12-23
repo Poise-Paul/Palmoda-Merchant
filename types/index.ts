@@ -122,3 +122,18 @@ export interface Response {
 export interface WalletResponse extends Response {
   data: Wallet;
 }
+
+export type AnalyticData = {
+  total_products: number;
+  total_orders: number;
+  total_revenue: number;
+  total_quantity_sold: number;
+  filters: {
+    start_date: string;
+    end_date: string;
+  };
+};
+
+export interface AnalyticsResponse extends Response {
+  data: AnalyticData;
+}

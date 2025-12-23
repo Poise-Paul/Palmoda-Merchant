@@ -25,10 +25,6 @@ function page() {
        }, []);
      
      const product = products.find((item) => item._id === _id);
-     console.log(product); 
-
-
-
      if (loading) {
             return (
               <ProtectedRoute>
