@@ -247,18 +247,18 @@ function EditProductPage() {
   };
 
   const handleUpdateProduct = async () => {
-    if (
-      !productName ||
-      !selectedCategory ||
-      !selectedSubCategory ||
-      !selectedGender ||
-      !description ||
-      !inventory ||
-      !price
-    ) {
-      toast.error("Please fill all required fields");
-      return;
-    }
+    // if (
+    //   !productName ||
+    //   !selectedCategory ||
+    //   !selectedSubCategory ||
+    //   !selectedGender ||
+    //   !description ||
+    //   !inventory ||
+    //   !price
+    // ) {
+    //   toast.error("Please fill all required fields");
+    //   return;
+    // }
 
     setLoading(true);
 
