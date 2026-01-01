@@ -17,7 +17,8 @@ import { useFetchAnalytics } from "./_lib/dashboard";
 interface ProductType {
   _id: string;
   name: string;
-  discounted_price: number;
+  cost_price: number;
+  discounted_price: number | null;
   status: string;
   quantity: number;
   images: string[];
