@@ -403,6 +403,17 @@ function Page() {
 
       if (res?.success) {
         toast.success("KYC updated successfully!");
+
+        // Refetch KYC data to confirm backend persisted the changes
+        const refreshedKyc = await getKycDetails();
+        if (refreshedKyc?.data) {
+          setBusinessDocUrl(refreshedKyc.data.business_registration_document || "");
+          setOwnerIdUrl(refreshedKyc.data.valid_owner_id || "");
+          setBankStatementUrl(refreshedKyc.data.bank_statement || "");
+
+          // Log to help debug if backend isn't persisting
+          console.log("Refetched KYC data:", refreshedKyc.data);
+        }
       } else {
         toast.error(res?.message || "Failed to update KYC");
       }

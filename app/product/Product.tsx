@@ -88,7 +88,11 @@ function ProductComponent({ product }: ProductProps) {
             <h3 className="text-red-500 font-semibold text-xs">Rejected</h3>
           )}
 
-          {product?.status !== "Approved" && product?.status !== "Rejected" && (
+          {product?.status === "Request Review" && (
+            <h3 className="text-orange-500 font-semibold text-xs">Request Review</h3>
+          )}
+
+          {product?.status !== "Approved" && product?.status !== "Rejected" && product?.status !== "Request Review" && (
             <h3 className="text-yellow-600 font-semibold text-xs">
               Pending Approval
             </h3>
@@ -190,29 +194,41 @@ function ProductComponent({ product }: ProductProps) {
             <hr className="text-gray-200 my-6" />
           </div>
         </div>
-        {product?.rejection_reason ||
-          (product?.review && (
+        {product?.status === "Rejected" && product?.rejection_reason && (
             <div className="border border-gray-200 ">
               <div className="px-4 py-3 border-b border-gray-200">
                 <h1 className="text-black font-semibold text-sm">
                   Admin Rejection Reason
                 </h1>
               </div>
-              <div className="grid grid-cols-1 gap-4 px-4 py-3">
-                <div className="border-b flex justify-between border-gray-200 p-2">
-                  <div className="flex gap-2">
-                    <CiUser className="text-black text-[25px]" />
-                    <div className="w-[350px]">
-                      <p className="text-gray-500 text-xs">
-                        {product.rejection_reason || product?.review}
-                      </p>
-                    </div>
-                  </div>
-                  {/* <p className='text-gray-500 text-xs'>Oct 11, 2023 - 14:32</p> */}
+              <div className="px-4 py-3">
+                <div className="flex gap-2">
+                  <CiUser className="text-black text-[25px] flex-shrink-0" />
+                  <p className="text-gray-500 text-xs">
+                    {product.rejection_reason}
+                  </p>
                 </div>
               </div>
             </div>
-          ))}
+          )}
+
+        {product?.status === "Request Review" && product?.review && (
+            <div className="border border-gray-200 ">
+              <div className="px-4 py-3 border-b border-gray-200">
+                <h1 className="text-black font-semibold text-sm">
+                  Admin Review Note
+                </h1>
+              </div>
+              <div className="px-4 py-3">
+                <div className="flex gap-2">
+                  <CiUser className="text-black text-[25px] flex-shrink-0" />
+                  <p className="text-gray-500 text-xs">
+                    {product.review}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
       </div>
     </section>
   );

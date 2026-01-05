@@ -84,11 +84,11 @@ function page() {
   const [hasDraft, setHasDraft] = useState(false);
   const router = useRouter();
 
-  // Check if user has wallet activated
+  // Check if user has wallet activated - redirect to wallet activation
   useEffect(() => {
     if (user && !user.is_wallet_activated) {
-      toast.error("Please activate your wallet in Payouts to upload products");
-      router.push("/payouts");
+      toast.info("Please activate your wallet to upload products");
+      router.push("/payouts?activate_wallet=true");
     }
   }, [user, router]);
 
